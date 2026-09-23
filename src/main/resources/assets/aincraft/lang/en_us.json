@@ -1,0 +1,15 @@
+{
+  "itemGroup.aincraft": "Example Mod Tab",
+  "block.aincraft.example_block": "Example Block",
+  "item.aincraft.example_item": "Example Item",
+
+  "aincraft.configuration.title": "Aincraft Configs",
+  "aincraft.configuration.section.aincraft.common.toml": "Aincraft Configs",
+  "aincraft.configuration.section.aincraft.common.toml.title": "Aincraft Configs",
+  "aincraft.configuration.items": "Item List",
+  "aincraft.configuration.logDirtBlock": "Log Dirt Block",
+  "aincraft.configuration.magicNumberIntroduction": "Magic Number Text",
+  "aincraft.configuration.magicNumber": "Magic Number",
+  "key.aincraft.skill": "Skill",
+  "key.categories.aincraft": "Aincraft"
+}
