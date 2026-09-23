@@ -8,6 +8,7 @@ import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -43,24 +44,28 @@ public class DomainExpansionSkill extends Skill {
                             .withStyle(ChatFormatting.RED)));
         }
 
-        if (age < 40) return;
+        if (age < 60) return;
 
-        for (int i = 0; i < 300; i++) {
+        double radius = Mth.lerp((float) (age - 60) / (getLifetime() - 60), 4, 10);
+        double thickness = Mth.lerp((float) (age - 60) / (getLifetime() - 60), 0.5, 1);
+
+        for (int i = 0; i < 50; i++) {
             SlashSpawner.spawn(player, SlashEffects.RED_VERTICAL.toBuilder()
                     .rotation(SlashEffects.RED_VERTICAL.rotation() + new Random().nextInt(-180, 180))
-                    .radius(2 + new Random().nextFloat(1, 2))
+                    .radius(radius)
                     .angles(SlashEffects.RED_VERTICAL.startAngle() +
-                                    new Random().nextInt(-45, 45),
+                                    new Random().nextInt(-25, 25),
                             SlashEffects.RED_VERTICAL.endAngle() +
-                                    new Random().nextInt(-45, 45))
+                                    new Random().nextInt(-25, 25))
                     .distance(new Random().nextDouble(-100, 100))
                     .xOffset(new Random().nextDouble(-100, 100))
                     .yOffset(new Random().nextDouble(-4, 25))
                     .zOffset(new Random().nextDouble(-100, 100))
-                    .thickness(1)
-                    .lifetime(5)
-                    .animation(0.5f, 0.5f)
-                    .build(), 10f);
+                    .thickness(thickness)
+                    .lifetime(6)
+                    .segments(1)
+                    .animation(0.2f, 0.5f)
+                    .build(), 10f, true);
         }
     }
 }

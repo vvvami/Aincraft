@@ -99,10 +99,10 @@ public final class SlashRenderer {
             double angle0 = Math.toRadians(Mth.lerp(t0, effect.startAngle(), effect.endAngle())) - epsilon;
             double angle1 = Math.toRadians(Mth.lerp(t1, effect.startAngle(), effect.endAngle())) + epsilon;
 
-            Vec3 inner0 = slash.getArcPoint(angle0, innerRadius);
-            Vec3 outer0 = slash.getArcPoint(angle0, outerRadius);
-            Vec3 inner1 = slash.getArcPoint(angle1, innerRadius);
-            Vec3 outer1 = slash.getArcPoint(angle1, outerRadius);
+            Vec3 inner0 = slash.getArcPoint(angle0, innerRadius, partialTick);
+            Vec3 outer0 = slash.getArcPoint(angle0, outerRadius, partialTick);
+            Vec3 inner1 = slash.getArcPoint(angle1, innerRadius, partialTick);
+            Vec3 outer1 = slash.getArcPoint(angle1, outerRadius, partialTick);
 
             int color0 = interpolateColor(effect.startColor(), effect.endColor(), t0, fade);
             int color1 = interpolateColor(effect.startColor(), effect.endColor(), t1, fade);
@@ -190,7 +190,8 @@ public final class SlashRenderer {
 
         private final SlashEffect effect;
 
-        private final Vec3 center;
+        private final Vec3 origin;
+        private final Vec3 forward;
         private final Vec3 horizontalAxis;
         private final Vec3 verticalAxis;
 
@@ -201,7 +202,8 @@ public final class SlashRenderer {
 
             float yaw = player.getYRot() * Mth.DEG_TO_RAD;
 
-            Vec3 forward = new Vec3(-Mth.sin(yaw), 0, Mth.cos(yaw)).normalize();
+            forward = new Vec3(-Mth.sin(yaw), 0, Mth.cos(yaw)).normalize();
+
             Vec3 right = new Vec3(forward.z, 0, -forward.x);
             Vec3 up = new Vec3(0, 1, 0);
 
@@ -214,9 +216,7 @@ public final class SlashRenderer {
             horizontalAxis = forward;
             verticalAxis = swingAxis;
 
-            center = player.getEyePosition()
-                    .add(effect.xOffset(), effect.yOffset(), effect.zOffset())
-                    .add(forward.scale(effect.distance()));
+            origin = player.getEyePosition().add(effect.xOffset(), effect.yOffset(), effect.zOffset());
         }
 
         private void tick() {
@@ -228,15 +228,22 @@ public final class SlashRenderer {
         }
 
         private float getProgress(float partialTick) {
-            return Mth.clamp((age + partialTick) / effect.lifetime(), 0.0f, 1.0f);
+            return Mth.clamp((age + partialTick) / effect.lifetime(), 0, 1);
+        }
+
+        private Vec3 getCenter(float partialTick) {
+            float progress = Mth.clamp((age + partialTick) / effect.lifetime(), 0, 1);
+            double distance = Mth.lerp(progress, effect.distance(), effect.endDistance());
+
+            return origin.add(forward.scale(distance));
         }
 
         private Vec3 getNormal() {
             return horizontalAxis.cross(verticalAxis).normalize();
         }
 
-        private Vec3 getArcPoint(double angle, double radius) {
-            return center
+        private Vec3 getArcPoint(double angle, double radius, float partialTick) {
+            return getCenter(partialTick)
                     .add(horizontalAxis.scale(Math.cos(angle) * radius))
                     .add(verticalAxis.scale(Math.sin(angle) * radius));
         }

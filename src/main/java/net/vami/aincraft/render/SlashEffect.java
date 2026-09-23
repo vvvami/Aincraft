@@ -9,6 +9,7 @@ public final class SlashEffect {
     private final ResourceLocation texture;
 
     private final double distance;
+    private final double endDistance;
 
     private final double xOffset;
     private final double yOffset;
@@ -35,6 +36,7 @@ public final class SlashEffect {
     private SlashEffect(Builder builder) {
         this.texture = builder.texture;
         this.distance = builder.distance;
+        this.endDistance = builder.endDistance;
         this.xOffset = builder.xOffset;
         this.yOffset = builder.yOffset;
         this.zOffset = builder.zOffset;
@@ -60,7 +62,13 @@ public final class SlashEffect {
         return distance;
     }
 
-    public double xOffset() { return xOffset; }
+    public double endDistance() {
+        return endDistance;
+    }
+
+    public double xOffset() {
+        return xOffset;
+    }
 
     public double yOffset() {
         return yOffset;
@@ -129,6 +137,7 @@ public final class SlashEffect {
         private final ResourceLocation texture;
 
         private double distance = 1.5;
+        private double endDistance = 1.5;
 
         private double xOffset = 0;
         private double yOffset = -0.4;
@@ -141,7 +150,7 @@ public final class SlashEffect {
         private double startAngle = 90;
         private double endAngle = -90;
 
-        private int segments = 24;
+        private int segments = 12;
         private int lifetime = 8;
 
         private float revealDuration = 0.4f;
@@ -159,6 +168,7 @@ public final class SlashEffect {
         private Builder(SlashEffect effect) {
             this.texture = effect.texture;
             this.distance = effect.distance;
+            this.endDistance = effect.endDistance;
             this.xOffset = effect.xOffset;
             this.yOffset = effect.yOffset;
             this.zOffset = effect.zOffset;
@@ -178,6 +188,13 @@ public final class SlashEffect {
 
         public Builder distance(double distance) {
             this.distance = distance;
+            this.endDistance = distance;
+            return this;
+        }
+
+        public Builder distance(double startDistance, double endDistance) {
+            this.distance = startDistance;
+            this.endDistance = endDistance;
             return this;
         }
 
@@ -260,6 +277,7 @@ public final class SlashEffect {
                 buf.writeResourceLocation(effect.texture());
 
                 buf.writeDouble(effect.distance());
+                buf.writeDouble(effect.endDistance());
                 buf.writeDouble(effect.xOffset());
                 buf.writeDouble(effect.yOffset());
                 buf.writeDouble(effect.zOffset());
@@ -283,7 +301,7 @@ public final class SlashEffect {
             },
 
             buf -> SlashEffect.builder(buf.readResourceLocation())
-                    .distance(buf.readDouble())
+                    .distance(buf.readDouble(), buf.readDouble())
                     .xOffset(buf.readDouble())
                     .yOffset(buf.readDouble())
                     .zOffset(buf.readDouble())
@@ -296,6 +314,5 @@ public final class SlashEffect {
                     .animation(buf.readFloat(), buf.readFloat())
                     .colors(buf.readInt(), buf.readInt())
                     .fullBright(buf.readBoolean())
-                    .build()
-    );
+                    .build());
 }

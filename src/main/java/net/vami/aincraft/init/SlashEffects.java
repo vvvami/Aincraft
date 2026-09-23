@@ -12,7 +12,7 @@ public final class SlashEffects {
     public static final SlashEffect RED_VERTICAL = SlashEffect.builder(SLASH_TEXTURE)
             .radius(1.6)
             .thickness(0.5)
-            .angles(-120, 70)
+            .angles(90, -90)
             .lifetime(7)
             .rotation(0)
             .color(0xFFFF3030)

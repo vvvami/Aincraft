@@ -55,6 +55,6 @@ public class InfiniteRushSkill extends Skill {
                 .thickness(0.8)
                 .lifetime(20)
                 .animation(0.15f, 0.2f)
-                .build(), 4f);
+                .build(), 4f, false);
     }
 }

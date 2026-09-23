@@ -14,7 +14,7 @@ import net.vami.aincraft.skill.Skill;
 public class DismantleSkill extends Skill {
 
     public DismantleSkill() {
-        super(70, true);
+        super(61, true);
     }
 
     @Override
@@ -48,16 +48,20 @@ public class DismantleSkill extends Skill {
             default -> {
                 if (age < 60) return;
 
-                float progress = (age - 60) / (float) (getLifetime() - 60);
-                double distance = Mth.lerp(progress, -10, 150);
+                player.connection.send(new ClientboundSetTitlesAnimationPacket(
+                        10, 20, 20));
+                player.connection.send(new ClientboundSetTitleTextPacket(
+                        Component.literal("DISMANTLE!")
+                                .withStyle(ChatFormatting.BOLD, ChatFormatting.RED)));
 
                 SlashSpawner.spawn(player, SlashEffects.RED_VERTICAL.toBuilder()
                         .thickness(5.5)
                         .radius(30)
-                        .lifetime(5)
-                        .animation(0.5f, 0.5f)
-                        .distance(distance)
-                        .build(), 100f);
+                        .lifetime(40)
+                        .animation(0.1f, 0.8f)
+                        .distance(-15, 150)
+                        .segments(4)
+                        .build(), 100f, true);
             }
         }
     }

@@ -10,15 +10,23 @@ import net.vami.aincraft.util.SlashAttack;
 
 public final class SlashSpawner {
 
-
-
     public static void spawn(ServerPlayer player, SlashEffect slash, float damage) {
-        SpawnSlashS2CPacket packet = new SpawnSlashS2CPacket(player.getId(), slash);
-        PacketDistributor.sendToPlayersTrackingEntityAndSelf(player, packet);
-        SlashAttack.spawn(player, slash, damage, true);
+        spawn(player, slash, damage, false);
     }
 
-    public static void spawn(Player player, SlashEffect slash) {
+    public static void spawn(ServerPlayer player, SlashEffect slash, float damage, boolean breakBlocks) {
+        SpawnSlashS2CPacket packet = new SpawnSlashS2CPacket(player.getId(), slash);
+        PacketDistributor.sendToPlayersTrackingEntityAndSelf(player, packet);
+
+        SlashAttack.spawn(player, slash, damage, breakBlocks);
+    }
+
+    public static void spawnEffect(Player player, SlashEffect slash) {
+        SpawnSlashS2CPacket packet = new SpawnSlashS2CPacket(player.getId(), slash);
+        PacketDistributor.sendToPlayersTrackingEntityAndSelf(player, packet);
+    }
+
+    public static void spawnEffectSelf(Player player, SlashEffect slash) {
         SlashRenderer.spawn(player, slash);
     }
 }
