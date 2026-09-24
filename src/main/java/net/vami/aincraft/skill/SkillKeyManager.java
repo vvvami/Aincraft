@@ -20,9 +20,10 @@ public class SkillKeyManager {
             switch (skill) {
                 case 1 -> Skill.activate(serverPlayer, Skills.TRIPLE_SLASH);
                 case 2 -> Skill.activate(serverPlayer, Skills.INFINITE_RUSH);
-                case 3 -> Skill.activate(serverPlayer, Skills.CLEAVE);
-                case 4 -> Skill.activate(serverPlayer, Skills.DOMAIN_EXPANSION);
+                case 3 -> Skill.activate(serverPlayer, Skills.DISMANTLE);
+                case 4 -> Skill.activate(serverPlayer, Skills.CLEAVE);
                 case 5 -> Skill.activate(serverPlayer, Skills.WORLD_SLASH);
+                case 6 -> Skill.activate(serverPlayer, Skills.DOMAIN_EXPANSION);
             }
 
         }

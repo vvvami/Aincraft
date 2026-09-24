@@ -9,6 +9,8 @@ import net.vami.aincraft.init.SlashEffects;
 import net.vami.aincraft.network.SlashSpawner;
 import net.vami.aincraft.skill.Skill;
 
+import java.awt.*;
+
 public class WorldSlashSkill extends Skill {
 
     public WorldSlashSkill() {
@@ -55,9 +57,11 @@ public class WorldSlashSkill extends Skill {
                 SlashSpawner.spawn(player, SlashEffects.RED_VERTICAL.toBuilder()
                         .thickness(5.5)
                         .radius(30)
+                        .scaling(false)
                         .lifetime(40)
-                        .animation(0.2f, 0.8f)
-                        .distance(-25, 150)
+                        .animation(0.8f, 0.9f)
+                        .distances(-25, -25, 18.75, 62.5, 150)
+                        .colors(Color.black.getRGB(), Color.red.darker().getRGB(), Color.red.getRGB())
                         .build(), 100f, true);
             }
         }

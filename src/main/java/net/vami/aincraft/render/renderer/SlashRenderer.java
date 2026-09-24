@@ -7,6 +7,7 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -122,14 +123,13 @@ public final class SlashRenderer {
             right[i] = centers[i].add(widthOffset);
         }
 
+        int color = interpolateColors(effect.colors(), slash.getProgress(partialTick), fade);
+
         for (int i = 0; i < renderSegments; i++) {
             float t1 = reveal * i / (float) renderSegments;
             float t2 = reveal * (i + 1) / (float) renderSegments;
 
-            int color1 = interpolateColor(effect.startColor(), effect.endColor(), t1, fade);
-            int color2 = interpolateColor(effect.startColor(), effect.endColor(), t2, fade);
-
-            renderQuad(poseStack, consumer, left[i], right[i], right[i + 1], left[i + 1], t1, t2, color1, color2, slash.getNormal());
+            renderQuad(poseStack, consumer, left[i], right[i], right[i + 1], left[i + 1], t1, t2, color, color, slash.getNormal());
         }
     }
 
@@ -176,6 +176,23 @@ public final class SlashRenderer {
         return 1.0f - (float) Math.pow(1.0f - value, 3.0);
     }
 
+    private static int interpolateColors(int[] colors, float progress, float alphaMultiplier) {
+        if (colors.length == 0) return 0;
+        if (colors.length == 1) return applyAlpha(colors[0], alphaMultiplier);
+
+        progress = Mth.clamp(progress, 0, 1);
+
+        float scaled = progress * (colors.length - 1);
+        int index = Math.min((int) scaled, colors.length - 2);
+        float localProgress = scaled - index;
+
+        return interpolateColor(
+                colors[index],
+                colors[index + 1],
+                localProgress,
+                alphaMultiplier);
+    }
+
     private static int interpolateColor(int from, int to, float progress, float alphaMultiplier) {
         int a = (int) Mth.lerp(progress, from >>> 24 & 0xFF, to >>> 24 & 0xFF);
         int r = (int) Mth.lerp(progress, from >>> 16 & 0xFF, to >>> 16 & 0xFF);
@@ -185,6 +202,11 @@ public final class SlashRenderer {
         a = (int) (a * alphaMultiplier);
 
         return a << 24 | r << 16 | g << 8 | b;
+    }
+
+    private static int applyAlpha(int color, float alphaMultiplier) {
+        int a = (int) ((color >>> 24 & 0xFF) * alphaMultiplier);
+        return color & 0x00FFFFFF | a << 24;
     }
 
     private static class ActiveSlash {
@@ -240,10 +262,9 @@ public final class SlashRenderer {
 
         private Vec3 getCenter(float partialTick) {
             float progress = Mth.clamp((age + partialTick) / effect.lifetime(), 0, 1);
-            double distance = Mth.lerp(progress, effect.distance(), effect.endDistance());
-
-            return origin.add(forward.scale(distance));
+            return origin.add(forward.scale(effect.getDistance(progress)));
         }
+
 
         private Vec3 getNormal() {
             return hAxis.cross(vAxis).normalize();

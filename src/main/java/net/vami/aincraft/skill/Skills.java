@@ -9,4 +9,6 @@ public class Skills {
     public static final Skill WIND_CUTTER = new WindCutterSkill();
     public static final Skill WORLD_SLASH = new WorldSlashSkill();
     public static final Skill CLEAVE = new CleaveSkill();
+    public static final Skill DISMANTLE = new DismantleSkill();
+
 }

@@ -2,20 +2,24 @@ package net.vami.aincraft.event;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.TieredItem;
 import net.minecraft.world.phys.HitResult;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.InputEvent;
-import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.vami.aincraft.Aincraft;
-import net.vami.aincraft.network.SlashSpawner;
+import net.vami.aincraft.init.SlashEffects;
 import net.vami.aincraft.network.packet.WeaponSlashC2SPacket;
+import net.vami.aincraft.render.SlashEffect;
+import net.vami.aincraft.util.SlashSweep;
 
-@EventBusSubscriber(modid = Aincraft.MOD_ID)
+import java.util.Random;
+
+@EventBusSubscriber(modid = Aincraft.MOD_ID, value = Dist.CLIENT)
 public class ModCombatEvents {
 
     @SubscribeEvent
@@ -26,15 +30,23 @@ public class ModCombatEvents {
         LocalPlayer player = mc.player;
         if (player == null) return;
 
-//        HitResult hit = mc.hitResult;
-//        if (hit != null && hit.getType() == HitResult.Type.BLOCK) return;
+        int rotation = new Random().nextInt(-35, 25);
 
-        if (player.getAttackStrengthScale(0.5F) <= 0.9F) return;
+        SlashEffect slash = SlashEffect.getWeaponSlash(player).toBuilder()
+                .rotate(rotation)
+                .build();
+
+        if (mc.hitResult != null && mc.hitResult.getType() == HitResult.Type.BLOCK) {
+            boolean wouldHit = SlashSweep.wouldHit(player, slash);
+            if (!wouldHit) return;
+        }
+
+        if (player.getAttackStrengthScale(0.5f) <= 0.9) return;
         if (!(player.getMainHandItem().getItem() instanceof TieredItem)) return;
 
         event.setCanceled(true);
 
-        PacketDistributor.sendToServer(new WeaponSlashC2SPacket());
+        PacketDistributor.sendToServer(new WeaponSlashC2SPacket(rotation));
         player.resetAttackStrengthTicker();
     }
 }

@@ -11,6 +11,7 @@ import net.vami.aincraft.init.SlashEffects;
 import net.vami.aincraft.network.SlashSpawner;
 import net.vami.aincraft.skill.Skill;
 
+import java.awt.*;
 import java.util.Random;
 
 public class InfiniteRushSkill extends Skill {
@@ -54,6 +55,8 @@ public class InfiniteRushSkill extends Skill {
                                 new Random().nextInt(-25, 25))
                 .thickness(0.8)
                 .lifetime(20)
+                .furthen(new Random().nextDouble(-0.5, 0.5))
+                .splash(Color.yellow.getRGB())
                 .animation(0.15f, 0.2f)
                 .build(), 4f, false);
     }

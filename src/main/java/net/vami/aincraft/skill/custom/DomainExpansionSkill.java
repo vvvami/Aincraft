@@ -10,9 +10,11 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.phys.AABB;
 import net.vami.aincraft.Aincraft;
 import net.vami.aincraft.init.ModSounds;
 import net.vami.aincraft.init.SlashEffects;
@@ -49,6 +51,16 @@ public class DomainExpansionSkill extends Skill {
 
         if (age < 60) return;
 
+        double radius = 50;
+        AABB box = player.getBoundingBox().inflate(radius);
+
+        for (LivingEntity entity : player.level().getEntitiesOfClass(
+                LivingEntity.class, box,
+                entity -> entity != player && entity.isAlive())) {
+            entity.invulnerableTime = 0;
+            entity.hurt(player.damageSources().playerAttack(player), 5f);
+        }
+
         double length = 15;
         double thickness = 1;
 
@@ -67,11 +79,12 @@ public class DomainExpansionSkill extends Skill {
                     .yOffset(new Random().nextDouble(-4, 25))
                     .zOffset(new Random().nextDouble(-50, 50))
                     .thickness(thickness)
-                    .lifetime(6)
+                    .scaling(false)
+                    .lifetime(4)
                     .line(length)
                     .color(color)
-                    .animation(0.5f, 0.7f)
-                    .build(), 10f, true);
+                    .animation(0.5f, 0.4f)
+                    .build(), 0f, true);
         }
     }
 }

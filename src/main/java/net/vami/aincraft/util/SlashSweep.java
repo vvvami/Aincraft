@@ -16,7 +16,9 @@ public final class SlashSweep {
     public record Segment(Vec3 from, Vec3 to, double radius) {}
 
     private final SlashEffect effect;
-    private final Vec3 origin, forward, vAxis;
+    private final Vec3 origin;
+    private final Vec3 forward;
+    private final Vec3 vAxis;
 
     public SlashSweep(Player player, SlashEffect effect) {
         this.effect = effect;
@@ -43,7 +45,7 @@ public final class SlashSweep {
     }
 
     public Vec3 center(float progress) {
-        return origin.add(forward.scale(Mth.lerp(progress, effect.distance(), effect.endDistance())));
+        return origin.add(forward.scale(effect.getDistance(progress)));
     }
 
 
@@ -57,14 +59,14 @@ public final class SlashSweep {
             case ARC -> {
                 if (currentHead > prevHead) {
                     calcSweptArc(segments, prevHead, currentHead, prevProgress, currentProgress);
-                } else if (effect.distance() != effect.endDistance()) {
+                } else if (effect.isMoving()) {
                     calcMovingArc(segments, prevProgress, currentProgress);
                 }
             }
             case LINE -> {
                 if (currentHead > prevHead) {
                     collectSweptLine(segments, prevHead, currentHead, prevProgress, currentProgress);
-                } else if (effect.distance() != effect.endDistance()) {
+                } else if (effect.isMoving()) {
                     collectMovingLine(segments, prevProgress, currentProgress);
                 }
             }
@@ -292,8 +294,7 @@ public final class SlashSweep {
                     Math.min(bounds.minZ, next.minZ),
                     Math.max(bounds.maxX, next.maxX),
                     Math.max(bounds.maxY, next.maxY),
-                    Math.max(bounds.maxZ, next.maxZ)
-            );
+                    Math.max(bounds.maxZ, next.maxZ));
         }
 
         return bounds;

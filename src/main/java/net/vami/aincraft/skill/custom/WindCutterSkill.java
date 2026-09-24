@@ -1,22 +1,16 @@
 package net.vami.aincraft.skill.custom;
 
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Mth;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.vami.aincraft.Aincraft;
 import net.vami.aincraft.init.SlashEffects;
 import net.vami.aincraft.network.SlashSpawner;
 import net.vami.aincraft.skill.Skill;
 
-import java.util.Random;
+import java.awt.*;
 
 public class WindCutterSkill extends Skill {
 
     public WindCutterSkill() {
-        super(1, true);
+        super(1, false);
     }
 
     @Override
@@ -26,7 +20,9 @@ public class WindCutterSkill extends Skill {
                 .lifetime(10)
                 .animation(0.3f, 0.8f)
                 .segments(3)
-                .distance(1.4, 10)
+                .distances(1.4, 10)
+                .inflate(1)
+                .splash(Color.yellow.getRGB())
                 .build(), 4f, true);
     }
 }
