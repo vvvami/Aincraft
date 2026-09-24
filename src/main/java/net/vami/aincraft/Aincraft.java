@@ -1,5 +1,6 @@
 package net.vami.aincraft;
 
+import net.vami.aincraft.init.ModSounds;
 import net.vami.aincraft.network.ModPackets;
 import org.slf4j.Logger;
 
@@ -27,6 +28,8 @@ public class Aincraft {
         modEventBus.addListener(this::commonSetup);
 
         NeoForge.EVENT_BUS.register(this);
+
+        ModSounds.SOUND_EVENTS.register(modEventBus);
 
         modEventBus.addListener(this::addCreative);
 

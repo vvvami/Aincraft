@@ -1,9 +1,9 @@
 package net.vami.aincraft.util;
 
-import it.unimi.dsi.fastutil.longs.LongArrayFIFOQueue;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.Blocks;
@@ -14,12 +14,10 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.vami.aincraft.Aincraft;
+import net.vami.aincraft.init.ModSounds;
 import net.vami.aincraft.render.SlashEffect;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 @EventBusSubscriber(modid = Aincraft.MOD_ID)
 public class SlashAttack {
@@ -42,17 +40,21 @@ public class SlashAttack {
 
     private int age;
 
-    public SlashAttack(ServerPlayer player, SlashEffect effect, float damage, boolean breakBlocks) {
+    public SlashAttack(ServerPlayer player, SlashEffect effect, float damage, boolean breakBlocks, boolean hasSound) {
         this.player = player;
         this.effect = effect;
         this.damage = damage;
         this.breakBlocks = breakBlocks;
 
         float yaw = player.getYRot() * Mth.DEG_TO_RAD;
+        float pitch = player.getXRot() * Mth.DEG_TO_RAD;
 
-        forward = new Vec3(-Mth.sin(yaw), 0, Mth.cos(yaw)).normalize();
-        Vec3 right = new Vec3(forward.z, 0, -forward.x);
-        Vec3 up = new Vec3(0, 1, 0);
+        forward = new Vec3(
+                -Mth.sin(yaw) * Mth.cos(pitch), -Mth.sin(pitch), Mth.cos(yaw) * Mth.cos(pitch))
+                .normalize();
+
+        Vec3 right = new Vec3(Mth.cos(yaw), 0, Mth.sin(yaw)).normalize();
+        Vec3 up = forward.cross(right).normalize();
 
         double rotation = Math.toRadians(effect.rotation());
 
@@ -63,11 +65,22 @@ public class SlashAttack {
         hAxis = forward;
         vAxis = swingAxis;
 
-        origin = player.getEyePosition().add(effect.xOffset(), effect.yOffset(), effect.zOffset());
+        origin = player.getEyePosition()
+                .add(right.scale(effect.sway()))
+                .add(up.scale(effect.lift()))
+                .add(effect.xOffset(), effect.yOffset(), effect.zOffset());
+
+        if (!hasSound) return;
+
+        Vec3 pos = getCenter();
+        player.level().playSound(null,
+                pos.x, pos.y, pos.z,
+                ModSounds.SLASH.get(), SoundSource.PLAYERS,
+                1.0f, new Random().nextFloat(0.5f, 2));
     }
 
-    public static void spawn(ServerPlayer player, SlashEffect effect, float damage, boolean breakBlocks) {
-        ATTACKS.add(new SlashAttack(player, effect, damage, breakBlocks));
+    public static void spawn(ServerPlayer player, SlashEffect effect, float damage, boolean breakBlocks, boolean hasSound) {
+        ATTACKS.add(new SlashAttack(player, effect, damage, breakBlocks, hasSound));
     }
 
     @SubscribeEvent
@@ -101,50 +114,84 @@ public class SlashAttack {
         float prevHead = getProgress(prevProgress);
         float currentHead = getProgress(currentProgress);
 
-        if (currentHead > prevHead) {
-            checkSweptArc(prevHead, currentHead, prevProgress, currentProgress);
-            return;
-        }
+        switch (effect.shape()) {
+            case ARC -> {
+                if (currentHead > prevHead) {
+                    checkSweptArc(prevHead, currentHead, prevProgress, currentProgress);
+                    return;
+                }
 
-        if (effect.distance() != effect.endDistance()) {
-            checkMovingArc(prevProgress, currentProgress);
+                if (effect.distance() != effect.endDistance()) {
+                    checkMovingArc(prevProgress, currentProgress);
+                }
+            }
+
+            case LINE -> {
+                if (currentHead > prevHead) {
+                    checkSweptLine(prevHead, currentHead, prevProgress, currentProgress);
+                    return;
+                }
+
+                if (effect.distance() != effect.endDistance()) {
+                    checkMovingLine(prevProgress, currentProgress);
+                }
+            }
         }
     }
 
     private void checkSweptArc(float prevHead, float currentHead, float prevProgress, float currentProgress) {
-        double startAngle = Math.toRadians(Mth.lerp(prevHead, effect.startAngle(), effect.endAngle()));
-        double endAngle = Math.toRadians(Mth.lerp(currentHead, effect.startAngle(), effect.endAngle()));
-
         double hitRadius = Math.max(effect.thickness(), 0.25);
 
-        double arcLength = Math.abs(endAngle - startAngle) * effect.radius();
+        double previousHeadAngle = Math.toRadians(Mth.lerp(prevHead, effect.startAngle(), effect.endAngle()));
 
-        double previousDistance = Mth.lerp(prevProgress, effect.distance(), effect.endDistance());
-        double currentDistance = Mth.lerp(currentProgress, effect.distance(), effect.endDistance());
-        double travelDistance = Math.abs(currentDistance - previousDistance);
+        double currentHeadAngle = Math.toRadians(Mth.lerp(currentHead, effect.startAngle(), effect.endAngle()));
 
-        double pathLength = Math.max(arcLength, travelDistance);
+        Vec3 previousHeadPoint = getArcPoint(previousHeadAngle, effect.radius(), prevProgress);
+        Vec3 currentHeadPoint = getArcPoint(currentHeadAngle, effect.radius(), currentProgress);
 
-        int samples = Math.max(1, (int) Math.ceil(pathLength / hitRadius));
+        double centerTravel = getCenter(prevProgress).distanceTo(getCenter(currentProgress));
+        double headTravel = previousHeadPoint.distanceTo(currentHeadPoint);
+
+        double maxTravel = Math.max(centerTravel, headTravel);
+        double spacing = hitRadius * 0.75;
+        int timeSamples = Math.max(1, (int) Math.ceil(maxTravel / spacing));
+
+        for (int i = 0; i <= timeSamples; i++) {
+            float t = i / (float) timeSamples;
+
+            float moveProgress = Mth.lerp(t, prevProgress, currentProgress);
+            float headProgress = Mth.lerp(t, prevHead, currentHead);
+
+            checkArcPoint(headProgress, moveProgress, hitRadius);
+        }
+    }
+
+    private void checkArcPoint(float headProgress, float moveProgress, double hitRadius) {
+        double startAngle = Math.toRadians(effect.startAngle());
+
+        double headAngle = Math.toRadians(Mth.lerp(headProgress, effect.startAngle(), effect.endAngle()));
+
+        double arcLength = Math.abs(headAngle - startAngle) * effect.radius();
+
+        int samples = Math.max(1, (int) Math.ceil(arcLength / hitRadius));
 
         Vec3 previousPoint = null;
 
         for (int i = 0; i <= samples; i++) {
             double t = i / (double) samples;
 
-            double angle = Mth.lerp(t, startAngle, endAngle);
-            float moveProgress = Mth.lerp((float) t, prevProgress, currentProgress);
+            double angle = Mth.lerp(t, startAngle, headAngle);
 
             Vec3 point = getArcPoint(angle, effect.radius(), moveProgress);
 
-            hitAt(point, hitRadius);
+            if (previousPoint == null) {
+                hitAt(point, hitRadius);
 
-            if (breakBlocks) {
-                if (previousPoint == null) {
+                if (breakBlocks) {
                     breakBlocksAlongLine(point, point, hitRadius * 1.5);
-                } else {
-                    breakBlocksAlongLine(previousPoint, point, hitRadius * 1.5);
                 }
+            } else {
+                checkLine(previousPoint, point, hitRadius);
             }
 
             previousPoint = point;
@@ -164,10 +211,53 @@ public class SlashAttack {
             double t = i / (double) arcSamples;
             double angle = Mth.lerp(t, startAngle, endAngle);
 
-            Vec3 previousPoint = getArcPoint(angle, effect.radius(), prevProgress);
+            Vec3 prevPoint = getArcPoint(angle, effect.radius(), prevProgress);
             Vec3 currentPoint = getArcPoint(angle, effect.radius(), currentProgress);
 
-            checkLine(previousPoint, currentPoint, hitRadius);
+            checkLine(prevPoint, currentPoint, hitRadius);
+        }
+    }
+
+    private void checkSweptLine(float prevHead, float currentHead, float prevProgress, float currentProgress) {
+        double hitRadius = Math.max(effect.thickness() / 2, 0.25);
+
+        Vec3 prevStart = getLinePoint(0, prevProgress);
+        Vec3 currentStart = getLinePoint(0, currentProgress);
+
+        Vec3 prevHeadPoint = getLinePoint(prevHead, prevProgress);
+        Vec3 currentHeadPoint = getLinePoint(currentHead, currentProgress);
+
+        double maxTravel = Math.max(prevStart.distanceTo(currentStart), prevHeadPoint.distanceTo(currentHeadPoint));
+
+        double sampleSpacing = hitRadius * 0.75;
+
+        int samples = Math.max(1, (int) Math.ceil(maxTravel / sampleSpacing));
+
+        for (int i = 0; i <= samples; i++) {
+            float t = i / (float) samples;
+
+            float moveProgress = Mth.lerp(t, prevProgress, currentProgress);
+            float headProgress = Mth.lerp(t, prevHead, currentHead);
+
+            Vec3 start = getLinePoint(0, moveProgress);
+            Vec3 head = getLinePoint(headProgress, moveProgress);
+
+            checkLine(start, head, hitRadius);
+        }
+    }
+
+    private void checkMovingLine(float prevProgress, float currentProgress) {
+        double hitRadius = Math.max(effect.thickness(), 0.25);
+
+        int samples = Math.max(1, (int) Math.ceil(Math.abs(effect.length()) / hitRadius));
+
+        for (int i = 0; i <= samples; i++) {
+            float lineProgress = i / (float) samples;
+
+            Vec3 prevPoint = getLinePoint(lineProgress, prevProgress);
+            Vec3 currentPoint = getLinePoint(lineProgress, currentProgress);
+
+            checkLine(prevPoint, currentPoint, hitRadius);
         }
     }
 
@@ -260,6 +350,10 @@ public class SlashAttack {
         }
     }
 
+    private Vec3 getCenter() {
+        return getCenter((float) age / effect.lifetime());
+    }
+
     private Vec3 getCenter(float progress) {
         double distance = Mth.lerp(progress, effect.distance(), effect.endDistance());
         return origin.add(forward.scale(distance));
@@ -269,6 +363,11 @@ public class SlashAttack {
         return getCenter(progress)
                 .add(hAxis.scale(Math.cos(angle) * radius))
                 .add(vAxis.scale(Math.sin(angle) * radius));
+    }
+
+    private Vec3 getLinePoint(float lineProgress, float moveProgress) {
+        double offset = Mth.lerp(lineProgress, -effect.length() / 2.0, effect.length() / 2.0);
+        return getCenter(moveProgress).add(vAxis.scale(offset));
     }
 
     private float getProgress(float progress) {

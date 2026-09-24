@@ -63,7 +63,7 @@ public final class SlashRenderer {
             RenderType renderType = NeoForgeRenderTypes.getUnlitTranslucent(effect.texture(), false);
 
             usedRenderTypes.add(renderType);
-            renderSlash(minecraft, poseStack, buffers.getBuffer(renderType), slash, partialTick);
+            renderSlash(poseStack, buffers.getBuffer(renderType), slash, partialTick, cameraPos);
         }
 
         poseStack.popPose();
@@ -71,86 +71,87 @@ public final class SlashRenderer {
         for (RenderType renderType : usedRenderTypes) buffers.endBatch(renderType);
     }
 
-    private static void renderSlash(Minecraft minecraft, PoseStack poseStack, VertexConsumer consumer, ActiveSlash slash, float partialTick) {
+    private static void renderSlash(PoseStack poseStack, VertexConsumer consumer, ActiveSlash slash, float partialTick, Vec3 cameraPos) {
         SlashEffect effect = slash.effect;
 
         float progress = slash.getProgress(partialTick);
         float reveal = easeOutCubic(Mth.clamp(progress / effect.revealTime(), 0, 1));
 
-        float fade = progress < effect.fadeStart()
-                ? 1
+        float fade = progress < effect.fadeStart() ? 1
                 : 1 - (progress - effect.fadeStart()) / (1 - effect.fadeStart());
 
         fade = Mth.clamp(fade, 0, 1);
 
-        double innerRadius = effect.radius() - effect.thickness() / 2;
-        double outerRadius = effect.radius() + effect.thickness() / 2;
+        if (reveal <= 0) return;
 
-        Vec3 normal = slash.getNormal();
+        int renderSegments;
 
-        for (int i = 0; i < effect.segments(); i++) {
-            float t0 = i / (float) effect.segments();
-            if (t0 >= reveal) break;
+        if (effect.shape() == SlashEffect.Shape.ARC) {
+            double arcLength = Math.toRadians(Math.abs(effect.endAngle() - effect.startAngle())) * effect.radius();
+            renderSegments = Mth.clamp((int) Math.ceil(arcLength * 8), 12, 96);
+        } else {
+            renderSegments = 1;
+        }
 
-            float t1 = Math.min((i + 1) / (float) effect.segments(), reveal);
+        Vec3[] centers = new Vec3[renderSegments + 1];
+        Vec3[] left = new Vec3[renderSegments + 1];
+        Vec3[] right = new Vec3[renderSegments + 1];
 
-            double epsilon = 0.0005;
+        for (int i = 0; i <= renderSegments; i++) {
+            float t = reveal * i / (float) renderSegments;
+            centers[i] = getVisualPoint(slash, t, partialTick);
+        }
 
-            double angle0 = Math.toRadians(Mth.lerp(t0, effect.startAngle(), effect.endAngle())) - epsilon;
-            double angle1 = Math.toRadians(Mth.lerp(t1, effect.startAngle(), effect.endAngle())) + epsilon;
+        for (int i = 0; i <= renderSegments; i++) {
+            Vec3 tangent;
 
-            Vec3 inner0 = slash.getArcPoint(angle0, innerRadius, partialTick);
-            Vec3 outer0 = slash.getArcPoint(angle0, outerRadius, partialTick);
-            Vec3 inner1 = slash.getArcPoint(angle1, innerRadius, partialTick);
-            Vec3 outer1 = slash.getArcPoint(angle1, outerRadius, partialTick);
+            if (i == 0) {
+                tangent = centers[1].subtract(centers[0]).normalize();
+            } else if (i == renderSegments) {
+                tangent = centers[i].subtract(centers[i - 1]).normalize();
+            } else {
+                tangent = centers[i + 1].subtract(centers[i - 1]).normalize();
+            }
 
-            int color0 = interpolateColor(effect.startColor(), effect.endColor(), t0, fade);
+            Vec3 view = cameraPos.subtract(centers[i]).normalize();
+            Vec3 widthAxis = view.cross(tangent).normalize();
+
+            Vec3 widthOffset = widthAxis.scale(effect.thickness() / 2);
+
+            left[i] = centers[i].subtract(widthOffset);
+            right[i] = centers[i].add(widthOffset);
+        }
+
+        for (int i = 0; i < renderSegments; i++) {
+            float t1 = reveal * i / (float) renderSegments;
+            float t2 = reveal * (i + 1) / (float) renderSegments;
+
             int color1 = interpolateColor(effect.startColor(), effect.endColor(), t1, fade);
+            int color2 = interpolateColor(effect.startColor(), effect.endColor(), t2, fade);
 
-            int light0 = getLight(minecraft, effect, inner0);
-            int light1 = getLight(minecraft, effect, inner1);
-
-            Vec3 depthOffset = normal.scale(effect.thickness() / 2);
-
-            Vec3 inner0Front = inner0.add(depthOffset);
-            Vec3 outer0Front = outer0.add(depthOffset);
-            Vec3 inner1Front = inner1.add(depthOffset);
-            Vec3 outer1Front = outer1.add(depthOffset);
-
-            Vec3 inner0Back = inner0.subtract(depthOffset);
-            Vec3 outer0Back = outer0.subtract(depthOffset);
-            Vec3 inner1Back = inner1.subtract(depthOffset);
-            Vec3 outer1Back = outer1.subtract(depthOffset);
-
-            Vec3 radialNormal = slash.getHorizontalAxis().scale(Math.cos((angle0 + angle1) / 2.0))
-                    .add(slash.getVerticalAxis().scale(Math.sin((angle0 + angle1) / 2.0)))
-                    .normalize();
-
-            renderQuad(poseStack, consumer, inner0Front, outer0Front, outer1Front, inner1Front,
-                    t0, t1, color0, color1, light0, light1, normal);
-
-            renderQuad(poseStack, consumer, outer0Back, outer0Front, outer1Front, outer1Back,
-                    t0, t1, color0, color1, light0, light1, radialNormal);
-
-            renderQuad(poseStack, consumer, inner0Front, inner0Back, inner1Back, inner1Front,
-                    t0, t1, color0, color1, light0, light1, radialNormal.scale(-1));}
+            renderQuad(poseStack, consumer, left[i], right[i], right[i + 1], left[i + 1], t1, t2, color1, color2, slash.getNormal());
+        }
     }
 
-    private static void renderQuad(PoseStack poseStack, VertexConsumer consumer, Vec3 inner0, Vec3 outer0, Vec3 outer1, Vec3 inner1,
-                                   float u0, float u1, int color0, int color1, int light0, int light1, Vec3 normal) {
+    private static Vec3 getVisualPoint(ActiveSlash slash, float progress, float partialTick) {
+        SlashEffect effect = slash.effect;
+
+        if (effect.shape() == SlashEffect.Shape.LINE) {
+            return slash.getLinePoint(progress, partialTick);
+        }
+
+        double angle = Math.toRadians(Mth.lerp(progress, effect.startAngle(), effect.endAngle()));
+
+        return slash.getArcPoint(angle, effect.radius(), partialTick);
+    }
+
+    private static void renderQuad(PoseStack poseStack, VertexConsumer consumer, Vec3 inner0, Vec3 outer0, Vec3 outer1, Vec3 inner1, float u0, float u1, int color0, int color1, Vec3 normal) {
         PoseStack.Pose pose = poseStack.last();
 
-        vertex(consumer, pose, inner0, u0, 1, color0, light0, normal);
-        vertex(consumer, pose, outer0, u0, 0, color0, light0, normal);
-        vertex(consumer, pose, outer1, u1, 0, color1, light1, normal);
-        vertex(consumer, pose, inner1, u1, 1, color1, light1, normal);
-
-        Vec3 reverseNormal = normal.scale(-1);
-
-        vertex(consumer, pose, inner1, u1, 1, color1, light1, reverseNormal);
-        vertex(consumer, pose, outer1, u1, 0, color1, light1, reverseNormal);
-        vertex(consumer, pose, outer0, u0, 0, color0, light0, reverseNormal);
-        vertex(consumer, pose, inner0, u0, 1, color0, light0, reverseNormal);
+        vertex(consumer, pose, inner0, u0, 1, color0, LightTexture.FULL_BRIGHT, normal);
+        vertex(consumer, pose, outer0, u0, 0, color0, LightTexture.FULL_BRIGHT, normal);
+        vertex(consumer, pose, outer1, u1, 0, color1, LightTexture.FULL_BRIGHT, normal);
+        vertex(consumer, pose, inner1, u1, 1, color1, LightTexture.FULL_BRIGHT, normal);
     }
 
     private static void vertex(VertexConsumer consumer, PoseStack.Pose pose, Vec3 position, float u, float v, int color, int light, Vec3 normal) {
@@ -192,8 +193,8 @@ public final class SlashRenderer {
 
         private final Vec3 origin;
         private final Vec3 forward;
-        private final Vec3 horizontalAxis;
-        private final Vec3 verticalAxis;
+        private final Vec3 hAxis;
+        private final Vec3 vAxis;
 
         private int age;
 
@@ -201,11 +202,14 @@ public final class SlashRenderer {
             this.effect = effect;
 
             float yaw = player.getYRot() * Mth.DEG_TO_RAD;
+            float pitch = player.getXRot() * Mth.DEG_TO_RAD;
 
-            forward = new Vec3(-Mth.sin(yaw), 0, Mth.cos(yaw)).normalize();
+            forward = new Vec3(
+                    -Mth.sin(yaw) * Mth.cos(pitch), -Mth.sin(pitch), Mth.cos(yaw) * Mth.cos(pitch))
+                    .normalize();
 
-            Vec3 right = new Vec3(forward.z, 0, -forward.x);
-            Vec3 up = new Vec3(0, 1, 0);
+            Vec3 right = new Vec3(Mth.cos(yaw), 0, Mth.sin(yaw)).normalize();
+            Vec3 up = forward.cross(right).normalize();
 
             double rotation = Math.toRadians(effect.rotation());
 
@@ -213,10 +217,13 @@ public final class SlashRenderer {
                     .add(right.scale(Math.sin(rotation)))
                     .normalize();
 
-            horizontalAxis = forward;
-            verticalAxis = swingAxis;
+            hAxis = forward;
+            vAxis = swingAxis;
 
-            origin = player.getEyePosition().add(effect.xOffset(), effect.yOffset(), effect.zOffset());
+            origin = player.getEyePosition()
+                    .add(right.scale(effect.sway()))
+                    .add(up.scale(effect.lift()))
+                    .add(effect.xOffset(), effect.yOffset(), effect.zOffset());
         }
 
         private void tick() {
@@ -239,21 +246,26 @@ public final class SlashRenderer {
         }
 
         private Vec3 getNormal() {
-            return horizontalAxis.cross(verticalAxis).normalize();
+            return hAxis.cross(vAxis).normalize();
         }
 
         private Vec3 getArcPoint(double angle, double radius, float partialTick) {
             return getCenter(partialTick)
-                    .add(horizontalAxis.scale(Math.cos(angle) * radius))
-                    .add(verticalAxis.scale(Math.sin(angle) * radius));
+                    .add(hAxis.scale(Math.cos(angle) * radius))
+                    .add(vAxis.scale(Math.sin(angle) * radius));
         }
 
-        public Vec3 getHorizontalAxis() {
-            return horizontalAxis;
+        private Vec3 getLinePoint(float progress, float partialTick) {
+            double offset = Mth.lerp(progress, -effect.length() / 2, effect.length() / 2);
+            return getCenter(partialTick).add(vAxis.scale(offset));
         }
 
-        public Vec3 getVerticalAxis() {
-            return verticalAxis;
+        public Vec3 getHAxis() {
+            return hAxis;
+        }
+
+        public Vec3 getvAxis() {
+            return vAxis;
         }
     }
 }

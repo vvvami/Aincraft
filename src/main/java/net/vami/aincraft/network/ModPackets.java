@@ -5,10 +5,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.vami.aincraft.Aincraft;
-import net.vami.aincraft.network.packet.SkillAbilityKeyC2SPacket;
-import net.vami.aincraft.network.packet.SkillCameraLockS2CPacket;
-import net.vami.aincraft.network.packet.SkillKeyC2SPacket;
-import net.vami.aincraft.network.packet.SpawnSlashS2CPacket;
+import net.vami.aincraft.network.packet.*;
 
 @EventBusSubscriber(modid = Aincraft.MOD_ID)
 public class ModPackets {
@@ -36,5 +33,10 @@ public class ModPackets {
                 SkillCameraLockS2CPacket.TYPE,
                 SkillCameraLockS2CPacket.STREAM_CODEC,
                 SkillCameraLockS2CPacket::handle);
+
+        registrar.playToServer(
+                WeaponSlashC2SPacket.TYPE,
+                WeaponSlashC2SPacket.STREAM_CODEC,
+                WeaponSlashC2SPacket::handle);
     }
 }

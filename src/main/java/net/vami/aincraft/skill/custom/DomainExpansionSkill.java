@@ -8,15 +8,18 @@ import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.vami.aincraft.Aincraft;
+import net.vami.aincraft.init.ModSounds;
 import net.vami.aincraft.init.SlashEffects;
 import net.vami.aincraft.network.SlashSpawner;
 import net.vami.aincraft.skill.Skill;
 
+import java.awt.*;
 import java.util.Random;
 
 public class DomainExpansionSkill extends Skill {
@@ -46,25 +49,28 @@ public class DomainExpansionSkill extends Skill {
 
         if (age < 60) return;
 
-        double radius = Mth.lerp((float) (age - 60) / (getLifetime() - 60), 4, 10);
-        double thickness = Mth.lerp((float) (age - 60) / (getLifetime() - 60), 0.5, 1);
+        double length = 15;
+        double thickness = 1;
 
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 100; i++) {
+            int color = new Random().nextInt(1, 10);
+            switch (color) {
+                case 1 -> color = Color.red.getRGB();
+                case 2 -> color = Color.white.getRGB();
+                default -> color = Color.black.getRGB();
+            }
+
             SlashSpawner.spawn(player, SlashEffects.RED_VERTICAL.toBuilder()
                     .rotation(SlashEffects.RED_VERTICAL.rotation() + new Random().nextInt(-180, 180))
-                    .radius(radius)
-                    .angles(SlashEffects.RED_VERTICAL.startAngle() +
-                                    new Random().nextInt(-25, 25),
-                            SlashEffects.RED_VERTICAL.endAngle() +
-                                    new Random().nextInt(-25, 25))
-                    .distance(new Random().nextDouble(-100, 100))
-                    .xOffset(new Random().nextDouble(-100, 100))
+                    .distance(new Random().nextDouble(-50, 50))
+                    .xOffset(new Random().nextDouble(-50, 50))
                     .yOffset(new Random().nextDouble(-4, 25))
-                    .zOffset(new Random().nextDouble(-100, 100))
+                    .zOffset(new Random().nextDouble(-50, 50))
                     .thickness(thickness)
                     .lifetime(6)
-                    .segments(1)
-                    .animation(0.2f, 0.5f)
+                    .line(length)
+                    .color(color)
+                    .animation(0.5f, 0.7f)
                     .build(), 10f, true);
         }
     }

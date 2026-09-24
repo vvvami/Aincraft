@@ -2,11 +2,6 @@ package net.vami.aincraft.skill;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.vami.aincraft.init.SlashEffects;
-import net.vami.aincraft.network.SlashSpawner;
-import net.vami.aincraft.render.SlashEffect;
-
-import java.util.Random;
 
 public class SkillKeyManager {
 
@@ -25,9 +20,9 @@ public class SkillKeyManager {
             switch (skill) {
                 case 1 -> Skill.activate(serverPlayer, Skills.TRIPLE_SLASH);
                 case 2 -> Skill.activate(serverPlayer, Skills.INFINITE_RUSH);
-                case 3 -> Skill.activate(serverPlayer, Skills.WIND_CUTTER);
+                case 3 -> Skill.activate(serverPlayer, Skills.CLEAVE);
                 case 4 -> Skill.activate(serverPlayer, Skills.DOMAIN_EXPANSION);
-                case 5 -> Skill.activate(serverPlayer, Skills.DISMANTLE);
+                case 5 -> Skill.activate(serverPlayer, Skills.WORLD_SLASH);
             }
 
         }

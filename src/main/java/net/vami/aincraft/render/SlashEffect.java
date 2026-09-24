@@ -11,12 +11,16 @@ public final class SlashEffect {
     private final double distance;
     private final double endDistance;
 
+    private final double sway;
+    private final double lift;
     private final double xOffset;
     private final double yOffset;
     private final double zOffset;
 
     private final double rotation;
 
+    private final Shape shape;
+    private final double length;
     private final double radius;
     private final double thickness;
     private final double startAngle;
@@ -33,14 +37,23 @@ public final class SlashEffect {
 
     private final boolean fullBright;
 
+    public enum Shape {
+        ARC,
+        LINE
+    }
+
     private SlashEffect(Builder builder) {
         this.texture = builder.texture;
         this.distance = builder.distance;
         this.endDistance = builder.endDistance;
+        this.sway = builder.sway;
+        this.lift = builder.lift;
         this.xOffset = builder.xOffset;
         this.yOffset = builder.yOffset;
         this.zOffset = builder.zOffset;
         this.rotation = builder.rotation;
+        this.shape = builder.shape;
+        this.length = builder.length;
         this.radius = builder.radius;
         this.thickness = builder.thickness;
         this.startAngle = builder.startAngle;
@@ -66,6 +79,14 @@ public final class SlashEffect {
         return endDistance;
     }
 
+    public double sway() {
+        return sway;
+    }
+
+    public double lift() {
+        return lift;
+    }
+
     public double xOffset() {
         return xOffset;
     }
@@ -78,6 +99,14 @@ public final class SlashEffect {
 
     public double rotation() {
         return rotation;
+    }
+
+    public Shape shape() {
+        return shape;
+    }
+
+    public double length() {
+        return length;
     }
 
     public double radius() {
@@ -139,12 +168,16 @@ public final class SlashEffect {
         private double distance = 1.5;
         private double endDistance = 1.5;
 
+        private double sway = 0;
+        private double lift = -0.4;
         private double xOffset = 0;
-        private double yOffset = -0.4;
+        private double yOffset = 0;
         private double zOffset = 0;
 
         private double rotation = 0;
 
+        private Shape shape = Shape.ARC;
+        private double length = 2.5;
         private double radius = 1.5;
         private double thickness = 0.25;
         private double startAngle = 90;
@@ -169,10 +202,14 @@ public final class SlashEffect {
             this.texture = effect.texture;
             this.distance = effect.distance;
             this.endDistance = effect.endDistance;
+            this.sway = effect.sway;
+            this.lift = effect.lift;
             this.xOffset = effect.xOffset;
             this.yOffset = effect.yOffset;
             this.zOffset = effect.zOffset;
             this.rotation = effect.rotation;
+            this.shape = effect.shape;
+            this.length = effect.length;
             this.radius = effect.radius;
             this.thickness = effect.thickness;
             this.startAngle = effect.startAngle;
@@ -198,6 +235,16 @@ public final class SlashEffect {
             return this;
         }
 
+        public Builder sway(double sway) {
+            this.sway = sway;
+            return this;
+        }
+
+        public Builder lift(double lift) {
+            this.lift = lift;
+            return this;
+        }
+
         public Builder xOffset(double xOffset) {
             this.xOffset = xOffset;
             return this;
@@ -218,13 +265,39 @@ public final class SlashEffect {
             return this;
         }
 
+        public Builder shape(Shape shape) {
+            this.shape = shape;
+            return this;
+        }
+
+        public Builder line(double length) {
+            this.shape = Shape.LINE;
+            this.length = length;
+            return this;
+        }
+
+        public Builder length(double length) {
+            this.length = length;
+            return this;
+        }
+
         public Builder radius(double radius) {
             this.radius = radius;
             return this;
         }
 
+        public Builder inflate(double radius) {
+            this.radius += radius;
+            return this;
+        }
+
         public Builder thickness(double thickness) {
             this.thickness = thickness;
+            return this;
+        }
+
+        public Builder thicken(double thickness) {
+            this.thickness += thickness;
             return this;
         }
 
@@ -278,11 +351,15 @@ public final class SlashEffect {
 
                 buf.writeDouble(effect.distance());
                 buf.writeDouble(effect.endDistance());
+                buf.writeDouble(effect.sway());
+                buf.writeDouble(effect.lift());
                 buf.writeDouble(effect.xOffset());
                 buf.writeDouble(effect.yOffset());
                 buf.writeDouble(effect.zOffset());
                 buf.writeDouble(effect.rotation());
 
+                buf.writeEnum(effect.shape());
+                buf.writeDouble(effect.length());
                 buf.writeDouble(effect.radius());
                 buf.writeDouble(effect.thickness());
                 buf.writeDouble(effect.startAngle());
@@ -302,10 +379,14 @@ public final class SlashEffect {
 
             buf -> SlashEffect.builder(buf.readResourceLocation())
                     .distance(buf.readDouble(), buf.readDouble())
+                    .sway(buf.readDouble())
+                    .lift(buf.readDouble())
                     .xOffset(buf.readDouble())
                     .yOffset(buf.readDouble())
                     .zOffset(buf.readDouble())
                     .rotation(buf.readDouble())
+                    .shape(buf.readEnum(Shape.class))
+                    .length(buf.readDouble())
                     .radius(buf.readDouble())
                     .thickness(buf.readDouble())
                     .angles(buf.readDouble(), buf.readDouble())

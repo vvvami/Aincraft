@@ -22,7 +22,7 @@ public final class SlashEffects {
     public static final SlashEffect GREEN_HORIZONTAL = SlashEffect.builder(SLASH_TEXTURE)
             .radius(1.5)
             .thickness(0.5)
-            .angles(-120, 70)
+            .angles(-90, 90)
             .lifetime(5)
             .rotation(90)
             .color(0xFF30FF50)

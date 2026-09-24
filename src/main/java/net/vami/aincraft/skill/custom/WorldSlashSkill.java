@@ -2,18 +2,16 @@ package net.vami.aincraft.skill.custom;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Mth;
 import net.vami.aincraft.init.SlashEffects;
 import net.vami.aincraft.network.SlashSpawner;
 import net.vami.aincraft.skill.Skill;
 
-public class DismantleSkill extends Skill {
+public class WorldSlashSkill extends Skill {
 
-    public DismantleSkill() {
+    public WorldSlashSkill() {
         super(61, true);
     }
 
@@ -58,9 +56,8 @@ public class DismantleSkill extends Skill {
                         .thickness(5.5)
                         .radius(30)
                         .lifetime(40)
-                        .animation(0.1f, 0.8f)
-                        .distance(-15, 150)
-                        .segments(4)
+                        .animation(0.2f, 0.8f)
+                        .distance(-25, 150)
                         .build(), 100f, true);
             }
         }
