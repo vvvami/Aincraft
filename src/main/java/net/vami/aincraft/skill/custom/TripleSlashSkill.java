@@ -16,18 +16,18 @@ public class TripleSlashSkill extends Skill {
     @Override
     protected void onTick(ServerPlayer player, int age) {
         switch (age) {
-            case 0 -> SlashSpawner.spawn(player, SlashEffects.RED_VERTICAL.toBuilder()
+            case 0 -> SlashSpawner.spawn(player, SlashEffects.RED_VERTICAL.edit()
                     .rotation(-45)
                     .furthen(1)
                     .colors(Color.magenta.getRGB(), Color.red.darker().darker().getRGB())
                     .build(), 5f, false);
 
-            case 4 -> SlashSpawner.spawn(player, SlashEffects.RED_VERTICAL.toBuilder()
+            case 4 -> SlashSpawner.spawn(player, SlashEffects.RED_VERTICAL.edit()
                     .rotation(45)
                     .colors(Color.magenta.getRGB(), Color.red.darker().darker().getRGB())
                     .build(), 5f, false);
 
-            case 8 -> SlashSpawner.spawn(player, SlashEffects.RED_VERTICAL.toBuilder()
+            case 8 -> SlashSpawner.spawn(player, SlashEffects.RED_VERTICAL.edit()
                     .rotation(90)
                     .radius(2)
                     .furthen(0.5)

@@ -2,21 +2,12 @@ package net.vami.aincraft.skill.custom;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
 import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.phys.AABB;
-import net.vami.aincraft.Aincraft;
-import net.vami.aincraft.init.ModSounds;
 import net.vami.aincraft.init.SlashEffects;
 import net.vami.aincraft.network.SlashSpawner;
 import net.vami.aincraft.skill.Skill;
@@ -72,7 +63,7 @@ public class DomainExpansionSkill extends Skill {
                 default -> color = Color.black.getRGB();
             }
 
-            SlashSpawner.spawn(player, SlashEffects.RED_VERTICAL.toBuilder()
+            SlashSpawner.spawn(player, SlashEffects.RED_VERTICAL.edit()
                     .rotation(SlashEffects.RED_VERTICAL.rotation() + new Random().nextInt(-180, 180))
                     .distance(new Random().nextDouble(-50, 50))
                     .xOffset(new Random().nextDouble(-50, 50))

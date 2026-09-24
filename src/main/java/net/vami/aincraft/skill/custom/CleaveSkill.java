@@ -15,7 +15,7 @@ public class CleaveSkill extends Skill {
         super(1, false);
     }
 
-    private static final SlashEffect hCleave = SlashEffects.GREEN_HORIZONTAL.toBuilder()
+    private static final SlashEffect hCleave = SlashEffects.GREEN_HORIZONTAL.edit()
             .thickness(0.45)
             .lifetime(10)
             .animation(0.3f, 0.8f)
@@ -26,7 +26,7 @@ public class CleaveSkill extends Skill {
             .scaling(false)
             .build();
 
-    private static final SlashEffect vCleave = hCleave.toBuilder().rotation(0).build();
+    private static final SlashEffect vCleave = hCleave.edit().rotation(0).build();
 
     @Override
     protected void onTick(ServerPlayer player, int age) {
@@ -43,13 +43,13 @@ public class CleaveSkill extends Skill {
         for (int i = 0; i < lines; i++) {
             float offset = start + i * spacing;
 
-            SlashSpawner.spawn(player, hCleave.toBuilder()
+            SlashSpawner.spawn(player, hCleave.edit()
                             .lift(offset)
                             .length(length)
                             .build(),
                     10f, true);
 
-            SlashSpawner.spawn(player, vCleave.toBuilder()
+            SlashSpawner.spawn(player, vCleave.edit()
                             .sway(offset)
                             .length(length)
                             .build(),

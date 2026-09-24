@@ -15,7 +15,7 @@ public class DismantleSkill extends Skill {
         super(1, false);
     }
 
-    private static final SlashEffect hCleave = SlashEffects.GREEN_HORIZONTAL.toBuilder()
+    private static final SlashEffect hCleave = SlashEffects.GREEN_HORIZONTAL.edit()
             .thickness(0.25)
             .lifetime(20)
             .animation(0.3f, 0.8f)
@@ -30,7 +30,7 @@ public class DismantleSkill extends Skill {
     @Override
     protected void onTick(ServerPlayer player, int age) {
         double rand = new Random().nextDouble(0, 15);
-        SlashSpawner.spawn(player, hCleave.toBuilder()
+        SlashSpawner.spawn(player, hCleave.edit()
                         .thicken(rand / 20)
                         .lengthen(rand * 2)
                         .build(),

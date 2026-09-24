@@ -11,7 +11,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.TieredItem;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.vami.aincraft.Aincraft;
-import net.vami.aincraft.init.SlashEffects;
 import net.vami.aincraft.network.SlashSpawner;
 import net.vami.aincraft.render.SlashEffect;
 
@@ -41,7 +40,7 @@ public record WeaponSlashC2SPacket(int rotation) implements CustomPacketPayload 
         AttributeInstance attackDamage = player.getAttribute(Attributes.ATTACK_DAMAGE);
         if (attackDamage == null) return;
 
-        SlashEffect slash = SlashEffect.getWeaponSlash(player).toBuilder()
+        SlashEffect slash = SlashEffect.getWeaponSlash(player).edit()
                 .rotate(packet.rotation())
                 .build();
 

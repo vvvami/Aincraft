@@ -2,7 +2,6 @@ package net.vami.aincraft.skill.custom;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -46,7 +45,7 @@ public class InfiniteRushSkill extends Skill {
     @Override
     protected void onTick(ServerPlayer player, int age) {
         if (!(age % 4 == 0)) return;
-        SlashSpawner.spawn(player, SlashEffects.GREEN_HORIZONTAL.toBuilder()
+        SlashSpawner.spawn(player, SlashEffects.GREEN_HORIZONTAL.edit()
                 .rotation(SlashEffects.GREEN_HORIZONTAL.rotation() + new Random().nextInt(-25, 25))
                 .radius(2 + new Random().nextFloat(0, 1))
                 .angles(SlashEffects.GREEN_HORIZONTAL.startAngle() +

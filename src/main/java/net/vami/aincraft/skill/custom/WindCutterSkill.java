@@ -15,7 +15,7 @@ public class WindCutterSkill extends Skill {
 
     @Override
     protected void onTick(ServerPlayer player, int age) {
-        SlashSpawner.spawn(player, SlashEffects.GREEN_HORIZONTAL.toBuilder()
+        SlashSpawner.spawn(player, SlashEffects.GREEN_HORIZONTAL.edit()
                 .thickness(0.4)
                 .lifetime(10)
                 .animation(0.3f, 0.8f)

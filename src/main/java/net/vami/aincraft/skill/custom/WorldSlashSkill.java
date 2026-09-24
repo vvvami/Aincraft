@@ -54,7 +54,7 @@ public class WorldSlashSkill extends Skill {
                         Component.literal("DISMANTLE!")
                                 .withStyle(ChatFormatting.BOLD, ChatFormatting.RED)));
 
-                SlashSpawner.spawn(player, SlashEffects.RED_VERTICAL.toBuilder()
+                SlashSpawner.spawn(player, SlashEffects.RED_VERTICAL.edit()
                         .thickness(5.5)
                         .radius(30)
                         .scaling(false)

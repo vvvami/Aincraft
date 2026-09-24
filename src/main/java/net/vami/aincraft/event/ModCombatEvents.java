@@ -2,8 +2,6 @@ package net.vami.aincraft.event;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.TieredItem;
 import net.minecraft.world.phys.HitResult;
 import net.neoforged.api.distmarker.Dist;
@@ -12,7 +10,6 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.vami.aincraft.Aincraft;
-import net.vami.aincraft.init.SlashEffects;
 import net.vami.aincraft.network.packet.WeaponSlashC2SPacket;
 import net.vami.aincraft.render.SlashEffect;
 import net.vami.aincraft.util.SlashSweep;
@@ -32,7 +29,7 @@ public class ModCombatEvents {
 
         int rotation = new Random().nextInt(-35, 25);
 
-        SlashEffect slash = SlashEffect.getWeaponSlash(player).toBuilder()
+        SlashEffect slash = SlashEffect.getWeaponSlash(player).edit()
                 .rotate(rotation)
                 .build();
 

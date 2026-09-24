@@ -165,7 +165,7 @@ public final class SlashEffect {
         return fullBright;
     }
 
-    public Builder toBuilder() {
+    public Builder edit() {
         return new Builder(this);
     }
 
@@ -505,7 +505,7 @@ public final class SlashEffect {
 
         double startDist = 1 - attackReach.getValue() / 4;
 
-        return SlashEffects.HEAVY_RED_DIAGONAL.toBuilder()
+        return SlashEffects.HEAVY_RED_DIAGONAL.edit()
                 .rotation(90)
                 .colors(Color.white.getRGB(), Color.gray.getRGB())
                 .distances(startDist, Math.max(startDist, attackReach.getValue() - 2))
