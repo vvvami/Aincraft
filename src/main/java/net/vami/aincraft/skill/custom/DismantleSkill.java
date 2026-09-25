@@ -19,10 +19,9 @@ public class DismantleSkill extends Skill {
             .thickness(0.25)
             .lifetime(3)
             .animation(0f, 0.8f)
-            .segments(6)
             .colors(Color.red.getRGB(),Color.black.getRGB())
-            .line(15)
-            .distances(-3, 120)
+            .line(20)
+            .distances(-2, 120)
             .scaling(false)
             .build();
 
@@ -30,12 +29,12 @@ public class DismantleSkill extends Skill {
     @Override
     protected void onTick(ServerPlayer player, int age) {
         Random random = new Random();
-        double size = random.nextDouble(-5, 5);
+        double size = random.nextDouble(-5, 0);
         double lift = random.nextDouble(-2, 2);
         double sway = random.nextDouble(-2, 2);
 
         SlashSpawner.spawn(player, hCleave.edit()
-                        .thicken(size / 18)
+                        .thicken(size / 17)
                         .rotate(new Random().nextInt(-90, 90))
                         .lift(lift)
                         .sway(sway)

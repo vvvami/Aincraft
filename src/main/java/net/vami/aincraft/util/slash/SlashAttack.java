@@ -1,4 +1,4 @@
-package net.vami.aincraft.util;
+package net.vami.aincraft.util.slash;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -6,7 +6,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -57,7 +56,12 @@ public class SlashAttack {
     }
 
     public static void spawn(ServerPlayer player, SlashEffect effect, float damage, boolean breakBlocks, boolean hasSound) {
-        ATTACKS.add(new SlashAttack(player, effect, damage, breakBlocks, hasSound));
+        SlashAttack attack = new SlashAttack(player, effect, damage, breakBlocks, hasSound);
+
+        ATTACKS.add(attack);
+        SlashActions.run(effect.onExpire(),
+                new SlashAction.Context(player,
+                        attack, null, null, null, damage, 0));
     }
 
     @SubscribeEvent
@@ -69,7 +73,12 @@ public class SlashAttack {
 
             attack.tick();
 
-            if (attack.isFinished()) iterator.remove();
+            if (attack.isFinished())  {
+                SlashActions.run(attack.effect.onExpire(),
+                        new SlashAction.Context(attack.player,
+                        attack, null, null, null, attack.damage, attack.effect.lifetime()));
+                iterator.remove();
+            }
         }
     }
 
@@ -91,7 +100,7 @@ public class SlashAttack {
     }
 
     public boolean isFinished() {
-        return age >= effect.lifetime() || !player.isAlive();
+        return age > effect.lifetime() || !player.isAlive();
     }
 
     private void checkEntities(List<SlashSweep.Segment> segments) {
@@ -106,12 +115,18 @@ public class SlashAttack {
             float progress = age / (float) effect.lifetime();
             float distDamage = effect.scaling() ? Math.max(damage / 2, damage - (damage * progress)) : damage;
 
-            entity.hurt(player.damageSources().playerAttack(player), distDamage);
+            if (entity.hurt(player.damageSources().playerAttack(player), distDamage)) {
+                SlashActions.run(
+                        effect.onHitEntity(),
+                        new SlashAction.Context(player, this, entity, null, null, damage, progress));
+            }
         }
     }
 
     private void breakBlocks(Vec3 from, Vec3 to, double radius) {
         ServerLevel level = player.serverLevel();
+
+        float progress = (float) this.age / this.effect.lifetime();
 
         int minX = Mth.floor(Math.min(from.x, to.x) - radius);
         int minY = Mth.floor(Math.min(from.y, to.y) - radius);
@@ -163,6 +178,12 @@ public class SlashAttack {
                     if (!processedBlocks.add(packedPos)) continue;
 
                     level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS | 16 | 32);
+
+                    if (!effect.onBreakBlock().equals(SlashActions.NONE)) {
+                        SlashActions.run(effect.onBreakBlock(),
+                                new SlashAction.Context(player,
+                                        this, null, pos.immutable(), state, damage, progress));
+                    }
                 }
             }
         }

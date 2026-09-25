@@ -58,9 +58,9 @@ public class WorldSlashSkill extends Skill {
                         .thickness(3.5)
                         .radius(75)
                         .scaling(false)
-                        .lifetime(50)
+                        .lifetime(100)
                         .animation(0.9f, 0.9f)
-                        .distances(-70, -70, -70, -70, -20, 62.5, 200)
+                        .distances(-65, -65, -65, -60, -20, 62.5, 200)
                         .colors(Color.black.getRGB(), Color.red.darker().darker().getRGB(), Color.red.getRGB(), Color.white.getRGB())
                         .build(), 100f, true);
             }

@@ -12,7 +12,8 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import net.vami.aincraft.Aincraft;
 import net.vami.aincraft.network.packet.WeaponSlashC2SPacket;
 import net.vami.aincraft.render.SlashEffect;
-import net.vami.aincraft.util.SlashSweep;
+import net.vami.aincraft.util.SlashUtil;
+import net.vami.aincraft.util.slash.SlashSweep;
 
 import java.util.Random;
 
@@ -37,7 +38,7 @@ public class ModCombatEvents {
             angles = new double[]{-135, 80};
         }
 
-        SlashEffect slash = SlashEffect.getWeaponSlash(player).edit()
+        SlashEffect slash = SlashUtil.getWeaponSlash(player).edit()
                 .rotate(rotation)
                 .angles(angles[0], angles[1])
                 .build();

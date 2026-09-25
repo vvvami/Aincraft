@@ -1,17 +1,12 @@
 package net.vami.aincraft.network;
 
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.network.PacketDistributor;
-import net.vami.aincraft.init.ModSounds;
 import net.vami.aincraft.network.packet.SpawnSlashS2CPacket;
 import net.vami.aincraft.render.SlashEffect;
 import net.vami.aincraft.render.renderer.SlashRenderer;
-import net.vami.aincraft.util.SlashAttack;
-
-import java.util.Random;
+import net.vami.aincraft.util.slash.SlashAttack;
 
 public final class SlashSpawner {
 

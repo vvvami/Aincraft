@@ -13,6 +13,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 import net.vami.aincraft.Aincraft;
 import net.vami.aincraft.network.SlashSpawner;
 import net.vami.aincraft.render.SlashEffect;
+import net.vami.aincraft.util.SlashUtil;
 
 public record WeaponSlashC2SPacket(int rotation) implements CustomPacketPayload {
 
@@ -49,7 +50,7 @@ public record WeaponSlashC2SPacket(int rotation) implements CustomPacketPayload 
             angles = new double[]{-135, 80};
         }
 
-        SlashEffect slash = SlashEffect.getWeaponSlash(player).edit()
+        SlashEffect slash = SlashUtil.getWeaponSlash(player).edit()
                 .rotate(rotation)
                 .angles(angles[0], angles[1])
                 .build();

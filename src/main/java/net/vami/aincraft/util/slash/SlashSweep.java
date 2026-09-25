@@ -1,4 +1,4 @@
-package net.vami.aincraft.util;
+package net.vami.aincraft.util.slash;
 
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;

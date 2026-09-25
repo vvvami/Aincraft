@@ -4,6 +4,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.vami.aincraft.Aincraft;
 import net.vami.aincraft.render.SlashEffect;
 
+import java.awt.*;
+
 public final class SlashEffects {
 
     public static final ResourceLocation SLASH_TEXTURE = ResourceLocation.fromNamespaceAndPath(
@@ -36,6 +38,12 @@ public final class SlashEffects {
             .lifetime(10)
             .rotation(-45)
             .color(0xFFFF2020)
+            .build();
+
+    public static final SlashEffect WEAPON = SlashEffect.builder(SLASH_TEXTURE)
+            .angles(-90, 90)
+            .rotation(90)
+            .colors(Color.white.getRGB(), Color.gray.getRGB())
             .build();
 
 }

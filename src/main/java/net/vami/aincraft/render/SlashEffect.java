@@ -4,10 +4,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.player.Player;
-import net.vami.aincraft.init.SlashEffects;
+import net.vami.aincraft.util.slash.SlashActions;
 
 import java.awt.*;
 import java.util.Arrays;
@@ -54,6 +51,12 @@ public final class SlashEffect {
     // idek why i have this
     private final boolean fullBright;
 
+    private final ResourceLocation onSpawn;
+    private final ResourceLocation onExpire;
+    private final ResourceLocation onHitEntity;
+    private final ResourceLocation onBreakBlock;
+
+
     public enum Shape {
         ARC,
         LINE
@@ -77,10 +80,15 @@ public final class SlashEffect {
         this.endAngle = builder.endAngle;
         this.segments = builder.segments;
         this.lifetime = builder.lifetime;
-        this.revealTime = builder.revealDuration;
+        this.revealTime = builder.revealTime;
         this.fadeStart = builder.fadeStart;
         this.colors = builder.colors;
         this.fullBright = builder.fullBright;
+        this.onSpawn = builder.onSpawn;
+        this.onExpire = builder.onExpire;
+        this.onHitEntity = builder.onHitEntity;
+        this.onBreakBlock = builder.onBreakBlock;
+
     }
 
     public ResourceLocation texture() {
@@ -165,6 +173,22 @@ public final class SlashEffect {
         return fullBright;
     }
 
+    public ResourceLocation onSpawn() {
+        return onSpawn;
+    }
+
+    public ResourceLocation onExpire() {
+        return onExpire;
+    }
+
+    public ResourceLocation onHitEntity() {
+        return onHitEntity;
+    }
+
+    public ResourceLocation onBreakBlock() {
+        return onBreakBlock;
+    }
+
     public Builder edit() {
         return new Builder(this);
     }
@@ -198,12 +222,17 @@ public final class SlashEffect {
         private int segments = 12;
         private int lifetime = 8;
 
-        private float revealDuration = 0.4f;
+        private float revealTime = 0.4f;
         private float fadeStart = 0.6f;
 
         private int[] colors = {Color.white.getRGB()};
 
         private boolean fullBright = true;
+
+        private ResourceLocation onSpawn = SlashActions.NONE;
+        private ResourceLocation onExpire = SlashActions.NONE;
+        private ResourceLocation onHitEntity = SlashActions.NONE;
+        private ResourceLocation onBreakBlock = SlashActions.NONE;
 
         private Builder(ResourceLocation texture) {
             this.texture = texture;
@@ -227,10 +256,14 @@ public final class SlashEffect {
             this.endAngle = effect.endAngle;
             this.segments = effect.segments;
             this.lifetime = effect.lifetime;
-            this.revealDuration = effect.revealTime;
+            this.revealTime = effect.revealTime;
             this.fadeStart = effect.fadeStart;
             this.colors = effect.colors;
             this.fullBright = effect.fullBright;
+            this.onSpawn = effect.onSpawn;
+            this.onExpire = effect.onExpire;
+            this.onHitEntity = effect.onHitEntity;
+            this.onBreakBlock = effect.onBreakBlock;
         }
 
         public Builder distance(double distance) {
@@ -366,8 +399,18 @@ public final class SlashEffect {
             return this;
         }
 
-        public Builder animation(float revealDuration, float fadeStart) {
-            this.revealDuration = revealDuration;
+        public Builder fading(float fadeStart) {
+            this.fadeStart = fadeStart;
+            return this;
+        }
+
+        public Builder reveal(float revealTime) {
+            this.revealTime = revealTime;
+            return this;
+        }
+
+        public Builder animation(float revealTime, float fadeStart) {
+            this.revealTime = revealTime;
             this.fadeStart = fadeStart;
             return this;
         }
@@ -400,12 +443,35 @@ public final class SlashEffect {
 
         // define a range of colors for the slash to transition through during lifetime
         public Builder colors(int ... colors) {
+            if (colors.length == 0) {
+                colors = new int[]{Color.white.getRGB()};
+            }
             this.colors = colors;
             return this;
         }
 
         public Builder fullBright(boolean fullBright) {
             this.fullBright = fullBright;
+            return this;
+        }
+
+        public Builder onSpawn(ResourceLocation onSpawn) {
+            this.onSpawn = onSpawn;
+            return this;
+        }
+
+        public Builder onExpire(ResourceLocation onExpire) {
+            this.onExpire = onExpire;
+            return this;
+        }
+
+        public Builder onHitEntity(ResourceLocation onHitEntity) {
+            this.onHitEntity = onHitEntity;
+            return this;
+        }
+
+        public Builder onBreakBlock(ResourceLocation onBreakBlock) {
+            this.onBreakBlock = onBreakBlock;
             return this;
         }
 
@@ -474,6 +540,12 @@ public final class SlashEffect {
 
                 buf.writeVarIntArray(effect.colors());
                 buf.writeBoolean(effect.fullBright());
+
+                buf.writeResourceLocation(effect.onSpawn());
+                buf.writeResourceLocation(effect.onExpire());
+                buf.writeResourceLocation(effect.onHitEntity());
+                buf.writeResourceLocation(effect.onBreakBlock());
+
             },
             buf -> SlashEffect.builder(buf.readResourceLocation())
                     .distances(readDoubleArray(buf))
@@ -494,25 +566,10 @@ public final class SlashEffect {
                     .animation(buf.readFloat(), buf.readFloat())
                     .colors(buf.readVarIntArray())
                     .fullBright(buf.readBoolean())
+                    .onSpawn(buf.readResourceLocation())
+                    .onExpire(buf.readResourceLocation())
+                    .onHitEntity(buf.readResourceLocation())
+                    .onBreakBlock(buf.readResourceLocation())
                     .build());
 
-    public static SlashEffect getWeaponSlash(Player player) {
-        AttributeInstance attackSpeed = player.getAttribute(Attributes.ATTACK_SPEED);
-        if (attackSpeed == null) return SlashEffects.GREEN_HORIZONTAL;
-
-        AttributeInstance attackReach = player.getAttribute(Attributes.ENTITY_INTERACTION_RANGE);
-        if (attackReach == null) return SlashEffects.GREEN_HORIZONTAL;
-
-        double startDist = 1 - (attackReach.getValue() / 4);
-
-        return SlashEffects.HEAVY_RED_DIAGONAL.edit()
-                .rotation(90)
-                .colors(Color.white.getRGB(), Color.gray.getRGB())
-                .distances(startDist, Math.max(startDist, attackReach.getValue() - 2))
-                .radius(attackReach.getValue() / 3)
-                .thickness(attackReach.getValue() / 12)
-                .animation((float) ((0.75f / attackSpeed.getValue())), (float) (0.25f / attackSpeed.getValue()))
-                .lifetime(Math.max(2, (int) ((int) attackReach.getValue() * 5 /  attackSpeed.getValue())))
-                .build();
-    }
 }

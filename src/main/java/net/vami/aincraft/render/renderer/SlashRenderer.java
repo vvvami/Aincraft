@@ -61,7 +61,7 @@ public final class SlashRenderer {
         for (ActiveSlash slash : ACTIVE) {
             SlashEffect effect = slash.effect;
 
-            RenderType renderType = NeoForgeRenderTypes.getUnlitTranslucent(effect.texture(), false);
+            RenderType renderType = NeoForgeRenderTypes.getUnlitTranslucent(effect.texture(), true);
 
             usedRenderTypes.add(renderType);
             renderSlash(poseStack, buffers.getBuffer(renderType), slash, partialTick, cameraPos);
@@ -253,7 +253,7 @@ public final class SlashRenderer {
         }
 
         private boolean isFinished() {
-            return age >= effect.lifetime();
+            return age > effect.lifetime();
         }
 
         private float getProgress(float partialTick) {
