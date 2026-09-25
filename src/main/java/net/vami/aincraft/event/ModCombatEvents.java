@@ -29,13 +29,22 @@ public class ModCombatEvents {
 
         int rotation = new Random().nextInt(-35, 25);
 
+        double[] angles;
+
+        if (rotation < 0) {
+            angles = new double[]{135, -80};
+        } else {
+            angles = new double[]{-135, 80};
+        }
+
         SlashEffect slash = SlashEffect.getWeaponSlash(player).edit()
                 .rotate(rotation)
+                .angles(angles[0], angles[1])
                 .build();
 
         if (mc.hitResult != null && mc.hitResult.getType() == HitResult.Type.BLOCK) {
-            boolean wouldHit = SlashSweep.wouldHit(player, slash);
-            if (!wouldHit) return;
+            if (player.isShiftKeyDown()) return;
+            if (!SlashSweep.wouldHit(player, slash)) return;
         }
 
         if (player.getAttackStrengthScale(0.5f) <= 0.9) return;

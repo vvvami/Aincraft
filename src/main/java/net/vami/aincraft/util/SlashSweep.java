@@ -1,7 +1,9 @@
 package net.vami.aincraft.util;
 
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -210,16 +212,16 @@ public final class SlashSweep {
     }
 
 
-    public static List<LivingEntity> findHits(Player player, List<Segment> segments, Set<Integer> excluded) {
+    public static List<Entity> findHits(Player player, List<Segment> segments, Set<Integer> excluded) {
         if (segments.isEmpty()) return List.of();
 
-        List<LivingEntity> hits = new ArrayList<>();
+        List<Entity> hits = new ArrayList<>();
 
         outer:
-        for (LivingEntity entity : player.level().getEntitiesOfClass(
-                LivingEntity.class,
+        for (Entity entity : player.level().getEntitiesOfClass(
+                Entity.class,
                 getBounds(segments),
-                entity -> entity != player && entity.isAlive() && !excluded.contains(entity.getId()))) {
+                entity -> entity != player && (!(entity instanceof ItemEntity)) && entity.isAlive() && !excluded.contains(entity.getId()))) {
             AABB bounds = entity.getBoundingBox();
 
             for (Segment segment : segments) {

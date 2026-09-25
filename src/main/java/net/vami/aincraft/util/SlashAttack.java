@@ -5,6 +5,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -94,16 +95,16 @@ public class SlashAttack {
     }
 
     private void checkEntities(List<SlashSweep.Segment> segments) {
-        List<LivingEntity> entities = SlashSweep.findHits(player, segments, hitEntities);
+        List<Entity> entities = SlashSweep.findHits(player, segments, hitEntities);
 
-        for (LivingEntity entity : entities) {
+        for (Entity entity : entities) {
             if (!hitEntities.add(entity.getId()))
                 continue;
 
             entity.invulnerableTime = 0;
 
             float progress = age / (float) effect.lifetime();
-            float distDamage = effect.scaling() ? damage - (damage * progress) : damage;
+            float distDamage = effect.scaling() ? Math.max(damage / 2, damage - (damage * progress)) : damage;
 
             entity.hurt(player.damageSources().playerAttack(player), distDamage);
         }

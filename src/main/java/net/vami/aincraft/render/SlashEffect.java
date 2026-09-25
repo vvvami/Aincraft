@@ -503,7 +503,7 @@ public final class SlashEffect {
         AttributeInstance attackReach = player.getAttribute(Attributes.ENTITY_INTERACTION_RANGE);
         if (attackReach == null) return SlashEffects.GREEN_HORIZONTAL;
 
-        double startDist = 1 - attackReach.getValue() / 4;
+        double startDist = 1 - (attackReach.getValue() / 4);
 
         return SlashEffects.HEAVY_RED_DIAGONAL.edit()
                 .rotation(90)
@@ -511,7 +511,8 @@ public final class SlashEffect {
                 .distances(startDist, Math.max(startDist, attackReach.getValue() - 2))
                 .radius(attackReach.getValue() / 3)
                 .thickness(attackReach.getValue() / 12)
-                .lifetime((int) Math.round(16 / attackSpeed.getValue()))
+                .animation((float) ((0.75f / attackSpeed.getValue())), (float) (0.25f / attackSpeed.getValue()))
+                .lifetime(Math.max(2, (int) ((int) attackReach.getValue() * 5 /  attackSpeed.getValue())))
                 .build();
     }
 }

@@ -40,8 +40,18 @@ public record WeaponSlashC2SPacket(int rotation) implements CustomPacketPayload 
         AttributeInstance attackDamage = player.getAttribute(Attributes.ATTACK_DAMAGE);
         if (attackDamage == null) return;
 
+        int rotation = packet.rotation();
+        double[] angles;
+
+        if (rotation < 0) {
+            angles = new double[]{135, -80};
+        } else {
+            angles = new double[]{-135, 80};
+        }
+
         SlashEffect slash = SlashEffect.getWeaponSlash(player).edit()
-                .rotate(packet.rotation())
+                .rotate(rotation)
+                .angles(angles[0], angles[1])
                 .build();
 
         SlashSpawner.spawn(player, slash, (float) attackDamage.getValue());

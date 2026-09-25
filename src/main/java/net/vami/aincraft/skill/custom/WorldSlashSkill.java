@@ -55,13 +55,13 @@ public class WorldSlashSkill extends Skill {
                                 .withStyle(ChatFormatting.BOLD, ChatFormatting.RED)));
 
                 SlashSpawner.spawn(player, SlashEffects.RED_VERTICAL.edit()
-                        .thickness(5.5)
-                        .radius(30)
+                        .thickness(3.5)
+                        .radius(75)
                         .scaling(false)
-                        .lifetime(40)
-                        .animation(0.8f, 0.9f)
-                        .distances(-25, -25, 18.75, 62.5, 150)
-                        .colors(Color.black.getRGB(), Color.red.darker().getRGB(), Color.red.getRGB())
+                        .lifetime(50)
+                        .animation(0.9f, 0.9f)
+                        .distances(-70, -70, -70, -70, -20, 62.5, 200)
+                        .colors(Color.black.getRGB(), Color.red.darker().darker().getRGB(), Color.red.getRGB(), Color.white.getRGB())
                         .build(), 100f, true);
             }
         }

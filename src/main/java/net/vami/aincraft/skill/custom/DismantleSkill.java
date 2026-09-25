@@ -17,24 +17,31 @@ public class DismantleSkill extends Skill {
 
     private static final SlashEffect hCleave = SlashEffects.GREEN_HORIZONTAL.edit()
             .thickness(0.25)
-            .lifetime(20)
-            .animation(0.3f, 0.8f)
+            .lifetime(3)
+            .animation(0f, 0.8f)
             .segments(6)
-            .colors(Color.black.getRGB(), Color.red.getRGB(), Color.white.getRGB())
-            .line(40)
-            .distances(-2, 120)
+            .colors(Color.red.getRGB(),Color.black.getRGB())
+            .line(15)
+            .distances(-3, 120)
             .scaling(false)
             .build();
 
 
     @Override
     protected void onTick(ServerPlayer player, int age) {
-        double rand = new Random().nextDouble(0, 15);
+        Random random = new Random();
+        double size = random.nextDouble(-5, 5);
+        double lift = random.nextDouble(-2, 2);
+        double sway = random.nextDouble(-2, 2);
+
         SlashSpawner.spawn(player, hCleave.edit()
-                        .thicken(rand / 20)
-                        .lengthen(rand * 2)
+                        .thicken(size / 18)
+                        .rotate(new Random().nextInt(-90, 90))
+                        .lift(lift)
+                        .sway(sway)
+                        .lengthen(size)
                         .build(),
-                10f, true);
+                20f, true);
 
     }
 }
