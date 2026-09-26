@@ -16,7 +16,6 @@ public class CleaveSkill extends Skill {
     }
 
     private static final SlashEffect hCleave = SlashEffects.GREEN_HORIZONTAL.edit()
-            .thickness(0.45)
             .lifetime(10)
             .animation(0.3f, 0.8f)
             .segments(6)
@@ -46,12 +45,14 @@ public class CleaveSkill extends Skill {
             SlashSpawner.spawn(player, hCleave.edit()
                             .lift(offset)
                             .length(length)
+                            .thickness(0.15 * spacing)
                             .build(),
                     10f, true);
 
             SlashSpawner.spawn(player, vCleave.edit()
                             .sway(offset)
                             .length(length)
+                            .thickness(0.15 * spacing)
                             .build(),
                     10f, true);
         }

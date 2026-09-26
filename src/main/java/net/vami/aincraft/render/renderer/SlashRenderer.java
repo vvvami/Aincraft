@@ -117,7 +117,7 @@ public final class SlashRenderer {
             Vec3 view = cameraPos.subtract(centers[i]).normalize();
             Vec3 widthAxis = view.cross(tangent).normalize();
 
-            Vec3 widthOffset = widthAxis.scale(effect.thickness() / 2);
+            Vec3 widthOffset = widthAxis.scale(effect.thickness());
 
             left[i] = centers[i].subtract(widthOffset);
             right[i] = centers[i].add(widthOffset);

@@ -157,7 +157,7 @@ public final class SlashSweep {
     }
 
     private void collectSweptLine(List<Segment> segments, float prevHead, float currentHead, float prevProgress, float currentProgress) {
-        double hitRadius = Math.max(effect.thickness() / 2, 0.25);
+        double hitRadius = Math.max(effect.thickness(), 0.25);
 
         double maxTravel = Math.max(
                 getLinePoint(0, prevProgress).distanceTo(getLinePoint(0, currentProgress)),
