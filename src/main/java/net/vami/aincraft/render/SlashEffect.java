@@ -4,7 +4,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import net.vami.aincraft.util.slash.SlashActions;
+import net.vami.aincraft.init.SlashActions;
 
 import java.awt.*;
 import java.util.Arrays;
@@ -28,6 +28,8 @@ public final class SlashEffect {
     private final double zOffset;
     // local rotation
     private final double rotation;
+    // (line only) tilts forward/back
+    private final double tilt;
     // slash shape (LINE, ARC)
     private final Shape shape;
     // provided line, length of line
@@ -72,6 +74,7 @@ public final class SlashEffect {
         this.yOffset = builder.yOffset;
         this.zOffset = builder.zOffset;
         this.rotation = builder.rotation;
+        this.tilt = builder.tilt;
         this.shape = builder.shape;
         this.length = builder.length;
         this.radius = builder.radius;
@@ -123,6 +126,10 @@ public final class SlashEffect {
 
     public double rotation() {
         return rotation;
+    }
+
+    public double tilt() {
+        return tilt;
     }
 
     public Shape shape() {
@@ -211,6 +218,7 @@ public final class SlashEffect {
         private double zOffset = 0;
 
         private double rotation = 0;
+        private double tilt = 0;
 
         private Shape shape = Shape.ARC;
         private double length = 2.5;
@@ -248,6 +256,7 @@ public final class SlashEffect {
             this.yOffset = effect.yOffset;
             this.zOffset = effect.zOffset;
             this.rotation = effect.rotation;
+            this.tilt = effect.tilt;
             this.shape = effect.shape;
             this.length = effect.length;
             this.radius = effect.radius;
@@ -331,6 +340,16 @@ public final class SlashEffect {
         // adds to rotation
         public Builder rotate(double rotation) {
             this.rotation += rotation;
+            return this;
+        }
+
+        public Builder tilt(double tilt) {
+            this.tilt = tilt;
+            return this;
+        }
+
+        public Builder pitch(double tilt) {
+            this.tilt += tilt;
             return this;
         }
 
@@ -523,7 +542,9 @@ public final class SlashEffect {
                 buf.writeDouble(effect.xOffset());
                 buf.writeDouble(effect.yOffset());
                 buf.writeDouble(effect.zOffset());
+
                 buf.writeDouble(effect.rotation());
+                buf.writeDouble(effect.tilt());
 
                 buf.writeEnum(effect.shape());
                 buf.writeDouble(effect.length());
@@ -556,6 +577,7 @@ public final class SlashEffect {
                     .yOffset(buf.readDouble())
                     .zOffset(buf.readDouble())
                     .rotation(buf.readDouble())
+                    .tilt(buf.readDouble())
                     .shape(buf.readEnum(Shape.class))
                     .length(buf.readDouble())
                     .radius(buf.readDouble())

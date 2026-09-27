@@ -21,7 +21,7 @@ public class DismantleSkill extends Skill {
             .animation(0f, 0.8f)
             .colors(Color.red.getRGB(),Color.black.getRGB())
             .line(20)
-            .distances(-2, 120)
+            .distances(-2.5, 120)
             .scaling(false)
             .build();
 
@@ -34,8 +34,8 @@ public class DismantleSkill extends Skill {
         double sway = random.nextDouble(-2, 2);
 
         SlashSpawner.spawn(player, hCleave.edit()
-                        .thicken(size / 17)
-                        .rotate(new Random().nextInt(-90, 90))
+                        .thicken(size / 15)
+                        .rotate(random.nextInt(-90, 90))
                         .lift(lift)
                         .sway(sway)
                         .lengthen(size)

@@ -1,5 +1,6 @@
 package net.vami.aincraft.util.slash;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -12,17 +13,20 @@ import net.vami.aincraft.render.SlashEffect;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 public final class SlashSweep {
 
     public record Segment(Vec3 from, Vec3 to, double radius) {}
 
+    private final Player player;
     private final SlashEffect effect;
     private final Vec3 origin;
     private final Vec3 forward;
     private final Vec3 vAxis;
 
     public SlashSweep(Player player, SlashEffect effect) {
+        this.player = player;
         this.effect = effect;
 
         float yaw = player.getYRot() * Mth.DEG_TO_RAD;
@@ -38,7 +42,17 @@ public final class SlashSweep {
         Vec3 up = forward.cross(right).normalize();
 
         double rotation = Math.toRadians(effect.rotation());
-        vAxis = up.scale(Math.cos(rotation)).add(right.scale(Math.sin(rotation))).normalize();
+        double tilt = Math.toRadians(effect.tilt());
+
+        Vec3 swingAxis = up.scale(Math.cos(rotation))
+                .add(right.scale(Math.sin(rotation)))
+                .normalize();
+
+        vAxis = effect.shape() == SlashEffect.Shape.LINE
+                ? swingAxis.scale(Math.cos(tilt))
+                .add(forward.scale(Math.sin(tilt)))
+                .normalize()
+                : swingAxis;
 
         origin = player.getEyePosition()
                 .add(right.scale(effect.sway()))
@@ -59,14 +73,31 @@ public final class SlashSweep {
 
         switch (effect.shape()) {
             case ARC -> {
-                if (currentHead > prevHead) {
+                if (effect.revealTime() <= 0) {
+                    if (effect.isMoving()) {
+                        calcMovingArc(segments, prevProgress, currentProgress);
+                    } else if (prevProgress == 0) {
+                        calcArc(
+                                segments,
+                                1,
+                                currentProgress,
+                                Math.max(effect.thickness(), 0.25)
+                        );
+                    }
+                } else if (currentHead > prevHead) {
                     calcSweptArc(segments, prevHead, currentHead, prevProgress, currentProgress);
                 } else if (effect.isMoving()) {
                     calcMovingArc(segments, prevProgress, currentProgress);
                 }
             }
             case LINE -> {
-                if (currentHead > prevHead) {
+                if (effect.revealTime() <= 0) {
+                    if (effect.isMoving()) {
+                        collectMovingLine(segments, prevProgress, currentProgress);
+                    } else if (prevProgress == 0) {
+                        collectFullLine(segments, currentProgress);
+                    }
+                } else if (currentHead > prevHead) {
                     collectSweptLine(segments, prevHead, currentHead, prevProgress, currentProgress);
                 } else if (effect.isMoving()) {
                     collectMovingLine(segments, prevProgress, currentProgress);
@@ -156,6 +187,13 @@ public final class SlashSweep {
         }
     }
 
+    private void collectFullLine(List<Segment> segments, float progress) {
+        segments.add(new Segment(
+                getLinePoint(0, progress),
+                getLinePoint(1, progress),
+                Math.max(effect.thickness(), 0.25)));
+    }
+
     private void collectSweptLine(List<Segment> segments, float prevHead, float currentHead, float prevProgress, float currentProgress) {
         double hitRadius = Math.max(effect.thickness(), 0.25);
 
@@ -204,6 +242,8 @@ public final class SlashSweep {
     }
 
     private float getProgress(float progress) {
+        if (effect.revealTime() <= 0) return progress <= 0 ? 0 : 1;
+
         return easeOutCubic(Mth.clamp(progress / effect.revealTime(), 0, 1));
     }
 
@@ -212,7 +252,7 @@ public final class SlashSweep {
     }
 
 
-    public static List<Entity> findHits(Player player, List<Segment> segments, Set<Integer> excluded) {
+    public List<Entity> findHits(List<Segment> segments, Set<Integer> excluded) {
         if (segments.isEmpty()) return List.of();
 
         List<Entity> hits = new ArrayList<>();
@@ -221,11 +261,13 @@ public final class SlashSweep {
         for (Entity entity : player.level().getEntitiesOfClass(
                 Entity.class,
                 getBounds(segments),
-                entity -> entity != player && (!(entity instanceof ItemEntity)) && entity.isAlive() && !excluded.contains(entity.getId()))) {
-            AABB bounds = entity.getBoundingBox();
+                entity -> entity != player
+                        && !(entity instanceof ItemEntity)
+                        && entity.isAlive()
+                        && !excluded.contains(entity.getId()))) {
 
             for (Segment segment : segments) {
-                if (intersects(bounds, segment)) {
+                if (intersects(entity.getBoundingBox(), segment)) {
                     hits.add(entity);
                     continue outer;
                 }
@@ -312,5 +354,53 @@ public final class SlashSweep {
                 Math.max(segment.from().x, segment.to().x) + r,
                 Math.max(segment.from().y, segment.to().y) + r,
                 Math.max(segment.from().z, segment.to().z) + r);
+    }
+
+    public static void forEachBlock(Segment segment, Consumer<BlockPos> consumer) {
+        Vec3 from = segment.from();
+        Vec3 to = segment.to();
+        double radius = segment.radius() * 1.5;
+
+        int minX = Mth.floor(Math.min(from.x, to.x) - radius);
+        int minY = Mth.floor(Math.min(from.y, to.y) - radius);
+        int minZ = Mth.floor(Math.min(from.z, to.z) - radius);
+
+        int maxX = Mth.floor(Math.max(from.x, to.x) + radius);
+        int maxY = Mth.floor(Math.max(from.y, to.y) + radius);
+        int maxZ = Mth.floor(Math.max(from.z, to.z) + radius);
+
+        double dx = to.x - from.x;
+        double dy = to.y - from.y;
+        double dz = to.z - from.z;
+        double lengthSqr = dx * dx + dy * dy + dz * dz;
+        double radiusSqr = radius * radius;
+
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    double t = lengthSqr == 0 ? 0 :
+                            ((x + 0.5 - from.x) * dx
+                             + (y + 0.5 - from.y) * dy
+                             + (z + 0.5 - from.z) * dz) / lengthSqr;
+
+                    t = Mth.clamp(t, 0, 1);
+
+                    double cx = from.x + dx * t;
+                    double cy = from.y + dy * t;
+                    double cz = from.z + dz * t;
+
+                    double ox = x + 0.5 - cx;
+                    double oy = y + 0.5 - cy;
+                    double oz = z + 0.5 - cz;
+
+                    if (ox * ox + oy * oy + oz * oz <= radiusSqr) {
+                        pos.set(x, y, z);
+                        consumer.accept(pos.immutable());
+                    }
+                }
+            }
+        }
     }
 }

@@ -234,13 +234,19 @@ public final class SlashRenderer {
             Vec3 up = forward.cross(right).normalize();
 
             double rotation = Math.toRadians(effect.rotation());
+            double tilt = Math.toRadians(effect.tilt());
 
             Vec3 swingAxis = up.scale(Math.cos(rotation))
                     .add(right.scale(Math.sin(rotation)))
                     .normalize();
 
             hAxis = forward;
-            vAxis = swingAxis;
+
+            vAxis = effect.shape() == SlashEffect.Shape.LINE ?
+                    swingAxis.scale(Math.cos(tilt))
+                    .add(forward.scale(Math.sin(tilt)))
+                    .normalize()
+                    : swingAxis;
 
             origin = player.getEyePosition()
                     .add(right.scale(effect.sway()))

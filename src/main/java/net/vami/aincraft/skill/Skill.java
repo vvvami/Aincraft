@@ -14,7 +14,8 @@ import java.util.Iterator;
 @EventBusSubscriber(modid = Aincraft.MOD_ID)
 public abstract class Skill {
 
-    private static final ArrayList<Active> ACTIVE_SKILLS = new ArrayList<>();
+    private static final ArrayList<Active> ACTIVE = new ArrayList<>();
+    private static final ArrayList<Active> PENDING = new ArrayList<>();
 
     private final int lifetime;
     private final boolean lockView;
@@ -26,7 +27,7 @@ public abstract class Skill {
 
     public static void activate(ServerPlayer player, Skill skill) {
         Active active = new Active(player, skill);
-        ACTIVE_SKILLS.add(active);
+        PENDING.add(active);
         skill.onStart(player);
     }
 
@@ -38,7 +39,7 @@ public abstract class Skill {
 
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
-        Iterator<Active> iterator = ACTIVE_SKILLS.iterator();
+        Iterator<Active> iterator = ACTIVE.iterator();
 
         while (iterator.hasNext()) {
             Active active = iterator.next();
@@ -49,6 +50,9 @@ public abstract class Skill {
                 iterator.remove();
             }
         }
+
+        ACTIVE.addAll(PENDING);
+        PENDING.clear();
     }
 
     public int getLifetime() {

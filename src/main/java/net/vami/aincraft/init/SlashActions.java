@@ -1,9 +1,9 @@
-package net.vami.aincraft.util.slash;
+package net.vami.aincraft.init;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.Level;
 import net.vami.aincraft.Aincraft;
+import net.vami.aincraft.util.slash.SlashAction;
 
 import java.util.HashMap;
 import java.util.function.Consumer;

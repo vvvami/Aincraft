@@ -18,7 +18,7 @@ public class SkillKeyManager {
             ServerPlayer serverPlayer = (ServerPlayer) player;
 
             switch (skill) {
-                case 1 -> Skill.activate(serverPlayer, Skills.TRIPLE_SLASH);
+                case 1 -> Skill.activate(serverPlayer, Skills.PIXIE_CUT);
                 case 2 -> Skill.activate(serverPlayer, Skills.INFINITE_RUSH);
                 case 3 -> Skill.activate(serverPlayer, Skills.DISMANTLE);
                 case 4 -> Skill.activate(serverPlayer, Skills.CLEAVE);

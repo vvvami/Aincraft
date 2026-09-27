@@ -10,19 +10,19 @@ import net.vami.aincraft.util.slash.SlashAttack;
 
 public final class SlashSpawner {
 
-    public static void spawn(ServerPlayer player, SlashEffect slash, float damage) {
-        spawn(player, slash, damage, false);
+    public static SlashAttack spawn(ServerPlayer player, SlashEffect slash, float damage) {
+        return spawn(player, slash, damage, false);
     }
 
-    public static void spawn(ServerPlayer player, SlashEffect slash, float damage, boolean breakBlocks) {
-        spawn(player, slash, damage, breakBlocks, true);
+    public static SlashAttack spawn(ServerPlayer player, SlashEffect slash, float damage, boolean breakBlocks) {
+        return spawn(player, slash, damage, breakBlocks, true);
     }
 
-    public static void spawn(ServerPlayer player, SlashEffect slash, float damage, boolean breakBlocks, boolean hasSound) {
+    public static SlashAttack spawn(ServerPlayer player, SlashEffect slash, float damage, boolean breakBlocks, boolean hasSound) {
         SpawnSlashS2CPacket packet = new SpawnSlashS2CPacket(player.getId(), slash);
         PacketDistributor.sendToPlayersTrackingEntityAndSelf(player, packet);
 
-        SlashAttack.spawn(player, slash, damage, breakBlocks, hasSound);
+        return SlashAttack.spawn(player, slash, damage, breakBlocks, hasSound);
     }
 
     public static void spawnEffect(Player player, SlashEffect slash) {

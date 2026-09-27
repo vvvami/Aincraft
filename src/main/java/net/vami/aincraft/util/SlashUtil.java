@@ -31,7 +31,7 @@ public class SlashUtil {
         return SlashEffects.WEAPON.edit()
                 .distances(startDist, Math.max(startDist, reach - 2))
                 .radius(reach / 3)
-                .thickness(reach / 12)
+                .thickness(reach / 20)
                 .animation((float) (0.75 / speed), fadeStart)
                 .lifetime(lifetime)
                 .build();

@@ -16,11 +16,11 @@ public class CleaveSkill extends Skill {
     }
 
     private static final SlashEffect hCleave = SlashEffects.GREEN_HORIZONTAL.edit()
-            .lifetime(10)
+            .lifetime(3)
             .animation(0.3f, 0.8f)
             .segments(6)
             .colors(Color.black.getRGB(), Color.red.getRGB(), Color.white.getRGB())
-            .line(30)
+            .line(20)
             .distances(-2, 60)
             .scaling(false)
             .build();
@@ -46,6 +46,7 @@ public class CleaveSkill extends Skill {
                             .lift(offset)
                             .length(length)
                             .thickness(0.15 * spacing)
+                            .liven((int) (lines * 1.5))
                             .build(),
                     10f, true);
 
@@ -53,6 +54,7 @@ public class CleaveSkill extends Skill {
                             .sway(offset)
                             .length(length)
                             .thickness(0.15 * spacing)
+                            .liven((int) (lines * 1.5))
                             .build(),
                     10f, true);
         }

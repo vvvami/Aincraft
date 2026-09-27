@@ -2,13 +2,16 @@ package net.vami.aincraft.skill.custom;
 
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.vami.aincraft.Aincraft;
 import net.vami.aincraft.init.SlashEffects;
 import net.vami.aincraft.network.SlashSpawner;
+import net.vami.aincraft.render.SlashEffect;
 import net.vami.aincraft.skill.Skill;
+import net.vami.aincraft.util.SlashUtil;
 
 import java.awt.*;
 import java.util.Random;
@@ -45,18 +48,22 @@ public class InfiniteRushSkill extends Skill {
     @Override
     protected void onTick(ServerPlayer player, int age) {
         if (!(age % 4 == 0)) return;
-        SlashSpawner.spawn(player, SlashEffects.GREEN_HORIZONTAL.edit()
-                .rotation(SlashEffects.GREEN_HORIZONTAL.rotation() + new Random().nextInt(-25, 25))
-                .radius(2 + new Random().nextFloat(0, 1))
-                .angles(SlashEffects.GREEN_HORIZONTAL.startAngle() +
-                                new Random().nextInt(-25, 25),
-                        SlashEffects.GREEN_HORIZONTAL.endAngle() +
-                                new Random().nextInt(-25, 25))
-                .thickness(0.8)
+
+        SlashEffect slash = SlashUtil.getWeaponSlash(player).edit()
+                .rotate(new Random().nextInt(-25, 25))
+                .inflate(new Random().nextFloat(0, 1))
                 .lifetime(20)
+                .distance(SlashUtil.getStartDist(player))
                 .furthen(new Random().nextDouble(-0.5, 0.5))
-                .splash(Color.yellow.getRGB())
-                .animation(0.15f, 0.2f)
+                .colors(Color.yellow.getRGB(), Color.green.getRGB(), Color.green.getRGB())
+                .fading(0.2f)
+                .build();
+
+        player.swing(InteractionHand.MAIN_HAND, true);
+
+        SlashSpawner.spawn(player, slash.edit()
+                .angles(slash.startAngle() + new Random().nextInt(-25, 25),
+                        slash.endAngle() + new Random().nextInt(-25, 25))
                 .build(), 4f, false);
     }
 }

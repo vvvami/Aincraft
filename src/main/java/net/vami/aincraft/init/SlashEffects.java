@@ -46,4 +46,10 @@ public final class SlashEffects {
             .colors(Color.white.getRGB(), Color.gray.getRGB())
             .build();
 
+    public static final SlashEffect PIXIE = SlashEffect.builder(SLASH_TEXTURE)
+            .distance(0)
+            .animation(0f, 0.2f)
+            .thickness(0.1)
+            .build();
+
 }

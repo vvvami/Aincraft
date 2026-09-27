@@ -2,25 +2,36 @@ package net.vami.aincraft.skill.custom;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.phys.Vec3;
+import net.vami.aincraft.init.SlashEffects;
 import net.vami.aincraft.network.SlashSpawner;
 import net.vami.aincraft.render.SlashEffect;
 import net.vami.aincraft.skill.Skill;
 import net.vami.aincraft.util.SlashUtil;
 
 import java.awt.*;
+import java.util.Random;
 
-public class TripleSlashSkill extends Skill {
+public class PixieCutSkill extends Skill {
 
-    public TripleSlashSkill() {
-        super(14, false);
+    public PixieCutSkill() {
+        super(30, false);
     }
 
-    private static final int[] colors = new int[]{Color.magenta.getRGB(), Color.red.darker().getRGB(), Color.red.darker().darker().getRGB()};
+    private static final int[] colors = new int[]{Color.magenta.getRGB(), Color.red.darker().getRGB()};
+
+    private Vec3 originPos;
+
+    @Override
+    protected void onStart(ServerPlayer player) {
+        originPos = player.position();
+    }
 
     @Override
     protected void onTick(ServerPlayer player, int age) {
         SlashEffect slash = SlashUtil.getWeaponSlash(player).edit()
                 .distance(SlashUtil.getStartDist(player))
+                .rotation(90)
                 .fading(0.5f)
                 .build();
 
@@ -28,30 +39,31 @@ public class TripleSlashSkill extends Skill {
             case 0 -> {
                 player.swing(InteractionHand.MAIN_HAND, true);
                 SlashSpawner.spawn(player, slash.edit()
-                    .rotation(-45)
                     .colors(colors)
                     .build(), 5f, false);
             }
 
-            case 4 -> {
+            case 1 -> {
                 player.swing(InteractionHand.MAIN_HAND, true);
                 SlashSpawner.spawn(player, slash.edit()
-                    .rotation(45)
+                    .rotation(0)
                     .furthen(1)
                     .colors(colors)
                     .build(), 5f, false);
             }
 
-            case 8 -> {
-                player.swing(InteractionHand.MAIN_HAND, true);
-                SlashSpawner.spawn(player, slash.edit()
-                    .rotation(90)
-                    .inflate(1)
-                    .furthen(2)
-                    .thicken(0.2)
-                    .angles(180, -180)
-                    .colors(colors)
-                    .build(), 8f, false);
+            default -> {
+                if (age < 12) return;
+
+                Random random = new Random();
+
+                for (int i = 0; i < 5; i++) {
+                    Skill.activate(player, new PixieSkill(this.originPos, player.position(), new Vec3(
+                            random.nextDouble(-5, 5),
+                            random.nextDouble(-1, 4),
+                            random.nextDouble(-5, 5)),
+                            3f));
+                }
             }
         }
     }
