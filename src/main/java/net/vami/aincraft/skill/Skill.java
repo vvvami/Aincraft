@@ -1,6 +1,7 @@
 package net.vami.aincraft.skill;
 
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
@@ -25,17 +26,17 @@ public abstract class Skill {
         this.lockView = lockView;
     }
 
-    public static void activate(ServerPlayer player, Skill skill) {
-        Active active = new Active(player, skill);
+    public static void activate(LivingEntity entity, Skill skill) {
+        Active active = new Active(entity, skill);
         PENDING.add(active);
-        skill.onStart(player);
+        skill.onStart(entity);
     }
 
-    protected void onStart(ServerPlayer player) {}
+    protected void onStart(LivingEntity entity) {}
 
-    protected abstract void onTick(ServerPlayer player, int age);
+    protected void onTick(LivingEntity entity, int age) {}
 
-    protected void onEnd(ServerPlayer player) {}
+    protected void onEnd(LivingEntity entity) {}
 
     @SubscribeEvent
     public static void onServerTick(ServerTickEvent.Post event) {
@@ -61,7 +62,7 @@ public abstract class Skill {
 
     private static class Active {
 
-        private final ServerPlayer player;
+        private final LivingEntity entity;
         private final Skill skill;
 
         private final float lockedYaw;
@@ -69,14 +70,14 @@ public abstract class Skill {
 
         private int age;
 
-        private Active(ServerPlayer player, Skill skill) {
-            this.player = player;
+        private Active(LivingEntity entity, Skill skill) {
+            this.entity = entity;
             this.skill = skill;
 
-            lockedYaw = player.getYRot();
-            lockedPitch = player.getXRot();
+            lockedYaw = entity.getYRot();
+            lockedPitch = entity.getXRot();
 
-            if (skill.lockView) {
+            if (skill.lockView && entity instanceof ServerPlayer player) {
                 PacketDistributor.sendToPlayer(player,
                         new SkillCameraLockS2CPacket(lockedYaw, lockedPitch, true));
 
@@ -87,30 +88,30 @@ public abstract class Skill {
             if (isFinished()) return;
 
             if (skill.lockView) {
-                player.setYRot(lockedYaw);
-                player.setXRot(lockedPitch);
-                player.setYHeadRot(lockedYaw);
-                player.yBodyRot = lockedYaw;
+                entity.setYRot(lockedYaw);
+                entity.setXRot(lockedPitch);
+                entity.setYHeadRot(lockedYaw);
+                entity.yBodyRot = lockedYaw;
 
-                player.setDeltaMovement(0, player.getDeltaMovement().y, 0);
-                player.hurtMarked = true;
+                entity.setDeltaMovement(0, entity.getDeltaMovement().y, 0);
+                entity.hurtMarked = true;
             }
 
-            skill.onTick(player, age);
+            skill.onTick(entity, age);
             age++;
         }
 
         private void finish() {
-            skill.onEnd(player);
+            skill.onEnd(entity);
 
-            if (skill.lockView) {
+            if (skill.lockView && entity instanceof ServerPlayer player) {
                 PacketDistributor.sendToPlayer(player,
                         new SkillCameraLockS2CPacket(0, 0, false));
             }
         }
 
         private boolean isFinished() {
-            return age >= skill.lifetime || !player.isAlive();
+            return age >= skill.lifetime || !entity.isAlive();
         }
     }
 }

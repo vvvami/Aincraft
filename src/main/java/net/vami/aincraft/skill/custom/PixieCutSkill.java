@@ -2,6 +2,7 @@ package net.vami.aincraft.skill.custom;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import net.vami.aincraft.init.SlashEffects;
 import net.vami.aincraft.network.SlashSpawner;
@@ -23,29 +24,29 @@ public class PixieCutSkill extends Skill {
     private Vec3 originPos;
 
     @Override
-    protected void onStart(ServerPlayer player) {
-        originPos = player.position();
+    protected void onStart(LivingEntity entity) {
+        originPos = entity.position();
     }
 
     @Override
-    protected void onTick(ServerPlayer player, int age) {
-        SlashEffect slash = SlashUtil.getWeaponSlash(player).edit()
-                .distance(SlashUtil.getStartDist(player))
+    protected void onTick(LivingEntity entity, int age) {
+        SlashEffect slash = SlashUtil.getWeaponSlash(entity).edit()
+                .distance(SlashUtil.getStartDist(entity))
                 .rotation(90)
                 .fading(0.5f)
                 .build();
 
         switch (age) {
             case 0 -> {
-                player.swing(InteractionHand.MAIN_HAND, true);
-                SlashSpawner.spawn(player, slash.edit()
-                    .colors(colors)
-                    .build(), 5f, false);
+                entity.swing(InteractionHand.MAIN_HAND, true);
+                SlashSpawner.spawn(entity, slash.edit()
+                        .colors(colors)
+                        .build(), 5f, false);
             }
 
             case 1 -> {
-                player.swing(InteractionHand.MAIN_HAND, true);
-                SlashSpawner.spawn(player, slash.edit()
+                entity.swing(InteractionHand.MAIN_HAND, true);
+                SlashSpawner.spawn(entity, slash.edit()
                     .rotation(0)
                     .furthen(1)
                     .colors(colors)
@@ -58,7 +59,7 @@ public class PixieCutSkill extends Skill {
                 Random random = new Random();
 
                 for (int i = 0; i < 5; i++) {
-                    Skill.activate(player, new PixieSkill(this.originPos, player.position(), new Vec3(
+                    Skill.activate(entity, new PixieSkill(this.originPos, new Vec3(
                             random.nextDouble(-5, 5),
                             random.nextDouble(-1, 4),
                             random.nextDouble(-5, 5)),

@@ -1,6 +1,7 @@
 package net.vami.aincraft.skill.custom;
 
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import net.vami.aincraft.init.SlashEffects;
 import net.vami.aincraft.network.SlashSpawner;
 import net.vami.aincraft.render.SlashEffect;
@@ -27,13 +28,13 @@ public class DismantleSkill extends Skill {
 
 
     @Override
-    protected void onTick(ServerPlayer player, int age) {
+    protected void onTick(LivingEntity entity, int age) {
         Random random = new Random();
         double size = random.nextDouble(-5, 0);
         double lift = random.nextDouble(-2, 2);
         double sway = random.nextDouble(-2, 2);
 
-        SlashSpawner.spawn(player, hCleave.edit()
+        SlashSpawner.spawn(entity, hCleave.edit()
                         .thicken(size / 15)
                         .rotate(random.nextInt(-90, 90))
                         .lift(lift)

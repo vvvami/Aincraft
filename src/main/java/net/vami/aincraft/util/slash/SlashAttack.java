@@ -1,12 +1,11 @@
 package net.vami.aincraft.util.slash;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.block.Block;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -27,7 +26,7 @@ public class SlashAttack {
 
     private final HashSet<Long> processedBlocks = new HashSet<>();
 
-    private final ServerPlayer player;
+    private final LivingEntity attacker;
     private final SlashEffect effect;
 
     private final SlashSweep sweep;
@@ -39,31 +38,31 @@ public class SlashAttack {
 
     private int age;
 
-    public SlashAttack(ServerPlayer player, SlashEffect effect, float damage, boolean breakBlocks, boolean hasSound) {
-        this.player = player;
+    public SlashAttack(LivingEntity attacker, SlashEffect effect, float damage, boolean breakBlocks, boolean hasSound) {
+        this.attacker = attacker;
         this.effect = effect;
         this.damage = damage;
         this.breakBlocks = breakBlocks;
-        this.sweep = new SlashSweep(player, effect);
+        this.sweep = new SlashSweep(attacker, effect);
 
         if (!hasSound) return;
 
         Vec3 pos = sweep.center(0);
 
-        player.level().playSound(null,
+        attacker.level().playSound(null,
                 pos.x, pos.y, pos.z,
                 ModSounds.SLASH.get(), SoundSource.PLAYERS,
                 1.0F, new Random().nextFloat(0.5F, 2.0F));
     }
 
-    public static SlashAttack spawn(ServerPlayer player, SlashEffect effect, float damage, boolean breakBlocks, boolean hasSound) {
+    public static SlashAttack spawn(LivingEntity attacker, SlashEffect effect, float damage, boolean breakBlocks, boolean hasSound) {
 
-        SlashAttack attack = new SlashAttack(player, effect, damage, breakBlocks, hasSound);
+        SlashAttack attack = new SlashAttack(attacker, effect, damage, breakBlocks, hasSound);
 
         ATTACKS.add(attack);
 
         SlashActions.run(effect.onSpawn(),
-                new SlashAction.Context(player, attack, null, null, null, damage, 0));
+                new SlashAction.Context(attacker, attack, null, null, null, damage, 0));
 
         return attack;
     }
@@ -79,7 +78,7 @@ public class SlashAttack {
 
             if (attack.isFinished())  {
                 SlashActions.run(attack.effect.onExpire(),
-                        new SlashAction.Context(attack.player,
+                        new SlashAction.Context(attack.attacker,
                         attack, null, null, null, attack.damage, 1));
                 iterator.remove();
             }
@@ -103,7 +102,7 @@ public class SlashAttack {
     }
 
     public boolean isFinished() {
-        return age >= effect.lifetime() || !player.isAlive();
+        return age >= effect.lifetime() || !attacker.isAlive();
     }
 
     private void hitEntities(List<SlashSweep.Segment> segments) {
@@ -117,16 +116,24 @@ public class SlashAttack {
 
             entity.invulnerableTime = 0;
 
-            if (entity.hurt(player.damageSources().playerAttack(player), dealtDamage)) {
+            DamageSource damageSource;
+            if (attacker instanceof ServerPlayer player) {
+                damageSource = player.damageSources().playerAttack(player);
+            } else {
+                damageSource = attacker.damageSources().mobAttack(attacker);
+            }
+
+            if (entity.hurt(damageSource, dealtDamage)) {
                 SlashActions.run(
                         effect.onHitEntity(), new SlashAction.Context(
-                                player, this, entity, null, null, dealtDamage, progress));
+                                attacker, this, entity, null, null, dealtDamage, progress));
             }
         }
     }
 
     private void breakBlocks(List<SlashSweep.Segment> segments) {
-        ServerLevel level = player.serverLevel();
+        if (!(attacker.level() instanceof  ServerLevel level)) return;
+
         float progress = age / (float) effect.lifetime();
 
         for (SlashSweep.Segment segment : segments) {
@@ -140,7 +147,7 @@ public class SlashAttack {
 
                 if (!effect.onBreakBlock().equals(SlashActions.NONE)) {
                     SlashActions.run(effect.onBreakBlock(), new SlashAction.Context(
-                                    player, this, null, pos, state, damage, progress));
+                            attacker, this, null, pos, state, damage, progress));
                 }
             });
         }

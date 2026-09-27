@@ -5,6 +5,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import net.vami.aincraft.init.SlashEffects;
 import net.vami.aincraft.network.SlashSpawner;
 import net.vami.aincraft.skill.Skill;
@@ -27,9 +28,9 @@ public class WorldSlashSkill extends Skill {
     };
 
     @Override
-    protected void onTick(ServerPlayer player, int age) {
+    protected void onTick(LivingEntity entity, int age) {
 
-        SlashSpawner.spawn(player, SlashEffects.RED_VERTICAL.edit()
+        SlashSpawner.spawn(entity, SlashEffects.RED_VERTICAL.edit()
                 .thickness(3.5)
                 .radius(75)
                 .scaling(false)

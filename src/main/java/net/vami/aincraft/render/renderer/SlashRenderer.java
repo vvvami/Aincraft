@@ -7,8 +7,8 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
@@ -27,8 +27,8 @@ public final class SlashRenderer {
 
     private static final ArrayList<ActiveSlash> ACTIVE = new ArrayList<>();
 
-    public static void spawn(Player player, SlashEffect effect) {
-        ACTIVE.add(new ActiveSlash(player, effect));
+    public static void spawn(LivingEntity source, SlashEffect effect) {
+        ACTIVE.add(new ActiveSlash(source, effect));
     }
 
     @SubscribeEvent
@@ -88,7 +88,7 @@ public final class SlashRenderer {
         int renderSegments;
 
         if (effect.shape() == SlashEffect.Shape.ARC) {
-            double arcLength = Math.toRadians(Math.abs(effect.endAngle() - effect.startAngle())) * effect.radius();
+            double arcLength = Math.toRadians(Math.abs(effect.endAngle() - effect.startAngle())) * effect.getRadius(progress);
             renderSegments = Mth.clamp((int) Math.ceil(arcLength * 8), 12, 96);
         } else {
             renderSegments = 1;
@@ -142,19 +142,19 @@ public final class SlashRenderer {
 
         double angle = Math.toRadians(Mth.lerp(progress, effect.startAngle(), effect.endAngle()));
 
-        return slash.getArcPoint(angle, effect.radius(), partialTick);
+        return slash.getArcPoint(angle, effect.getRadius(progress), partialTick);
     }
 
     private static void renderQuad(PoseStack poseStack, VertexConsumer consumer, Vec3 inner0, Vec3 outer0, Vec3 outer1, Vec3 inner1, float u0, float u1, int color0, int color1, Vec3 normal) {
         PoseStack.Pose pose = poseStack.last();
 
-        vertex(consumer, pose, inner0, u0, 1, color0, LightTexture.FULL_BRIGHT, normal);
-        vertex(consumer, pose, outer0, u0, 0, color0, LightTexture.FULL_BRIGHT, normal);
-        vertex(consumer, pose, outer1, u1, 0, color1, LightTexture.FULL_BRIGHT, normal);
-        vertex(consumer, pose, inner1, u1, 1, color1, LightTexture.FULL_BRIGHT, normal);
+        vertex(consumer, pose, inner0, u0, 1, color0, normal);
+        vertex(consumer, pose, outer0, u0, 0, color0, normal);
+        vertex(consumer, pose, outer1, u1, 0, color1, normal);
+        vertex(consumer, pose, inner1, u1, 1, color1, normal);
     }
 
-    private static void vertex(VertexConsumer consumer, PoseStack.Pose pose, Vec3 position, float u, float v, int color, int light, Vec3 normal) {
+    private static void vertex(VertexConsumer consumer, PoseStack.Pose pose, Vec3 position, float u, float v, int color, Vec3 normal) {
         int a = color >>> 24 & 0xFF;
         int r = color >>> 16 & 0xFF;
         int g = color >>> 8 & 0xFF;
@@ -164,7 +164,7 @@ public final class SlashRenderer {
                 .setColor(r, g, b, a)
                 .setUv(u, v)
                 .setOverlay(OverlayTexture.NO_OVERLAY)
-                .setLight(light)
+                .setLight(LightTexture.FULL_BRIGHT)
                 .setNormal(pose, (float) normal.x, (float) normal.y, (float) normal.z);
     }
 
@@ -220,11 +220,11 @@ public final class SlashRenderer {
 
         private int age;
 
-        private ActiveSlash(Player player, SlashEffect effect) {
+        private ActiveSlash(LivingEntity entity, SlashEffect effect) {
             this.effect = effect;
 
-            float yaw = player.getYRot() * Mth.DEG_TO_RAD;
-            float pitch = player.getXRot() * Mth.DEG_TO_RAD;
+            float yaw = entity.getYRot() * Mth.DEG_TO_RAD;
+            float pitch = entity.getXRot() * Mth.DEG_TO_RAD;
 
             forward = new Vec3(
                     -Mth.sin(yaw) * Mth.cos(pitch), -Mth.sin(pitch), Mth.cos(yaw) * Mth.cos(pitch))
@@ -248,7 +248,7 @@ public final class SlashRenderer {
                     .normalize()
                     : swingAxis;
 
-            origin = player.getEyePosition()
+            origin = entity.getEyePosition()
                     .add(right.scale(effect.sway()))
                     .add(up.scale(effect.lift()))
                     .add(effect.xOffset(), effect.yOffset(), effect.zOffset());
@@ -282,8 +282,12 @@ public final class SlashRenderer {
                     .add(vAxis.scale(Math.sin(angle) * radius));
         }
 
-        private Vec3 getLinePoint(float progress, float partialTick) {
-            double offset = Mth.lerp(progress, -effect.length() / 2, effect.length() / 2);
+        private Vec3 getLinePoint(float lineProgress, float partialTick) {
+            float progress = getProgress(partialTick);
+            double length = effect.getLength(progress);
+
+            double offset = Mth.lerp(lineProgress, -length / 2, length / 2);
+
             return getCenter(partialTick).add(vAxis.scale(offset));
         }
 
@@ -291,7 +295,7 @@ public final class SlashRenderer {
             return hAxis;
         }
 
-        public Vec3 getvAxis() {
+        public Vec3 getVAxis() {
             return vAxis;
         }
     }

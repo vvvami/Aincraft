@@ -33,9 +33,9 @@ public final class SlashEffect {
     // slash shape (LINE, ARC)
     private final Shape shape;
     // provided line, length of line
-    private final double length;
+    private final double[] lengths;
     // provided arc, radius of arc
-    private final double radius;
+    private final double[] radius;
     // thickness of slash
     private final double thickness;
     // curvature of angle, 0 start -> 360 end == full circle
@@ -76,7 +76,7 @@ public final class SlashEffect {
         this.rotation = builder.rotation;
         this.tilt = builder.tilt;
         this.shape = builder.shape;
-        this.length = builder.length;
+        this.lengths = builder.lengths;
         this.radius = builder.radius;
         this.thickness = builder.thickness;
         this.startAngle = builder.startAngle;
@@ -136,11 +136,11 @@ public final class SlashEffect {
         return shape;
     }
 
-    public double length() {
-        return length;
+    public double[] lengths() {
+        return lengths;
     }
 
-    public double radius() {
+    public double[] radius() {
         return radius;
     }
 
@@ -221,8 +221,8 @@ public final class SlashEffect {
         private double tilt = 0;
 
         private Shape shape = Shape.ARC;
-        private double length = 2.5;
-        private double radius = 1.5;
+        private double[] lengths = new double[]{2.5};
+        private double[] radius = new double[]{1.5};
         private double thickness = 0.25;
         private double startAngle = 90;
         private double endAngle = -90;
@@ -258,7 +258,7 @@ public final class SlashEffect {
             this.rotation = effect.rotation;
             this.tilt = effect.tilt;
             this.shape = effect.shape;
-            this.length = effect.length;
+            this.lengths = effect.lengths;
             this.radius = effect.radius;
             this.thickness = effect.thickness;
             this.startAngle = effect.startAngle;
@@ -360,28 +360,51 @@ public final class SlashEffect {
 
         public Builder line(double length) {
             this.shape = Shape.LINE;
-            this.length = length;
+            this.lengths = new double[]{length};
+            return this;
+        }
+
+        public Builder line() {
+            this.shape = Shape.LINE;
             return this;
         }
 
         public Builder length(double length) {
-            this.length = length;
+            this.lengths = new double[]{length};
+            return this;
+        }
+
+        public Builder lengths(double ... length) {
+            this.lengths = length;
             return this;
         }
 
         public Builder lengthen(double length) {
-            this.length += length;
+            lengths = lengths.clone();
+            for (int i = 0; i < lengths.length; i++) {
+                lengths[i] += length;
+            }
+
             return this;
         }
 
         public Builder radius(double radius) {
+            this.radius = new double[]{radius};
+            return this;
+        }
+
+        public Builder radii(double ... radius) {
             this.radius = radius;
             return this;
         }
 
         // adds to radius
         public Builder inflate(double radius) {
-            this.radius += radius;
+            this.radius = this.radius.clone();
+            for (int i = 0; i < this.radius.length; i++) {
+                this.radius[i] += radius;
+            }
+
             return this;
         }
 
@@ -500,20 +523,32 @@ public final class SlashEffect {
     }
 
     public double getDistance(float progress) {
-        if (distances.length == 0) return 0;
-        if (distances.length == 1) return distances[0];
-
-        progress = Mth.clamp(progress, 0, 1);
-
-        float scaled = progress * (distances.length - 1);
-        int index = Math.min((int) scaled, distances.length - 2);
-        float localProgress = scaled - index;
-
-        return Mth.lerp(localProgress, distances[index], distances[index + 1]);
+        return interpolate(distances, progress);
     }
 
     public boolean isMoving() {
         return distances.length > 1;
+    }
+
+    public double getRadius(float progress) {
+        return interpolate(radius, progress);
+    }
+
+    public double getLength(float progress) {
+        return interpolate(lengths, progress);
+    }
+
+    private static double interpolate(double[] values, float progress) {
+        if (values.length == 0) return 0;
+        if (values.length == 1) return values[0];
+
+        progress = Mth.clamp(progress, 0, 1);
+
+        float scaled = progress * (values.length - 1);
+        int index = Math.min((int) scaled, values.length - 2);
+        float localProgress = scaled - index;
+
+        return Mth.lerp(localProgress, values[index], values[index + 1]);
     }
 
     private static void writeDoubleArray(RegistryFriendlyByteBuf buf, double[] values) {
@@ -547,8 +582,8 @@ public final class SlashEffect {
                 buf.writeDouble(effect.tilt());
 
                 buf.writeEnum(effect.shape());
-                buf.writeDouble(effect.length());
-                buf.writeDouble(effect.radius());
+                writeDoubleArray(buf, effect.lengths());
+                writeDoubleArray(buf, effect.radius());
                 buf.writeDouble(effect.thickness());
                 buf.writeDouble(effect.startAngle());
                 buf.writeDouble(effect.endAngle());
@@ -579,8 +614,8 @@ public final class SlashEffect {
                     .rotation(buf.readDouble())
                     .tilt(buf.readDouble())
                     .shape(buf.readEnum(Shape.class))
-                    .length(buf.readDouble())
-                    .radius(buf.readDouble())
+                    .lengths(readDoubleArray(buf))
+                    .radii(readDoubleArray(buf))
                     .thickness(buf.readDouble())
                     .angles(buf.readDouble(), buf.readDouble())
                     .segments(buf.readVarInt())

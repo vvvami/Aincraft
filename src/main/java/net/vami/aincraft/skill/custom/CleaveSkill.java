@@ -1,6 +1,7 @@
 package net.vami.aincraft.skill.custom;
 
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import net.vami.aincraft.init.SlashEffects;
 import net.vami.aincraft.network.SlashSpawner;
 import net.vami.aincraft.render.SlashEffect;
@@ -28,7 +29,7 @@ public class CleaveSkill extends Skill {
     private static final SlashEffect vCleave = hCleave.edit().rotation(0).build();
 
     @Override
-    protected void onTick(ServerPlayer player, int age) {
+    protected void onTick(LivingEntity entity, int age) {
         Random random = new Random();
 
         int lines = random.nextInt(3, 9);
@@ -42,7 +43,7 @@ public class CleaveSkill extends Skill {
         for (int i = 0; i < lines; i++) {
             float offset = start + i * spacing;
 
-            SlashSpawner.spawn(player, hCleave.edit()
+            SlashSpawner.spawn(entity, hCleave.edit()
                             .lift(offset)
                             .length(length)
                             .thickness(0.15 * spacing)
@@ -50,7 +51,7 @@ public class CleaveSkill extends Skill {
                             .build(),
                     10f, true);
 
-            SlashSpawner.spawn(player, vCleave.edit()
+            SlashSpawner.spawn(entity, vCleave.edit()
                             .sway(offset)
                             .length(length)
                             .thickness(0.15 * spacing)

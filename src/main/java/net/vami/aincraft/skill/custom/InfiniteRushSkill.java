@@ -3,6 +3,7 @@ package net.vami.aincraft.skill.custom;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -32,36 +33,36 @@ public class InfiniteRushSkill extends Skill {
                     AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
 
     @Override
-    protected void onStart(ServerPlayer player) {
-        AttributeInstance speed = player.getAttribute(Attributes.MOVEMENT_SPEED);
+    protected void onStart(LivingEntity entity) {
+        AttributeInstance speed = entity.getAttribute(Attributes.MOVEMENT_SPEED);
 
         if (speed != null) speed.addOrUpdateTransientModifier(SPEED_MODIFIER);
     }
 
     @Override
-    protected void onEnd(ServerPlayer player) {
-        AttributeInstance speed = player.getAttribute(Attributes.MOVEMENT_SPEED);
+    protected void onEnd(LivingEntity entity) {
+        AttributeInstance speed = entity.getAttribute(Attributes.MOVEMENT_SPEED);
 
         if (speed != null) speed.removeModifier(SPEED_MODIFIER_ID);
     }
 
     @Override
-    protected void onTick(ServerPlayer player, int age) {
+    protected void onTick(LivingEntity entity, int age) {
         if (!(age % 4 == 0)) return;
 
-        SlashEffect slash = SlashUtil.getWeaponSlash(player).edit()
+        SlashEffect slash = SlashUtil.getWeaponSlash(entity).edit()
                 .rotate(new Random().nextInt(-25, 25))
                 .inflate(new Random().nextFloat(0, 1))
                 .lifetime(20)
-                .distance(SlashUtil.getStartDist(player))
+                .distance(SlashUtil.getStartDist(entity))
                 .furthen(new Random().nextDouble(-0.5, 0.5))
                 .colors(Color.yellow.getRGB(), Color.green.getRGB(), Color.green.getRGB())
                 .fading(0.2f)
                 .build();
 
-        player.swing(InteractionHand.MAIN_HAND, true);
+        entity.swing(InteractionHand.MAIN_HAND, true);
 
-        SlashSpawner.spawn(player, slash.edit()
+        SlashSpawner.spawn(entity, slash.edit()
                 .angles(slash.startAngle() + new Random().nextInt(-25, 25),
                         slash.endAngle() + new Random().nextInt(-25, 25))
                 .build(), 4f, false);

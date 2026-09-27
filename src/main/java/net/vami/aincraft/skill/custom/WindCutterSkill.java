@@ -1,6 +1,7 @@
 package net.vami.aincraft.skill.custom;
 
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import net.vami.aincraft.init.SlashEffects;
 import net.vami.aincraft.network.SlashSpawner;
 import net.vami.aincraft.skill.Skill;
@@ -14,8 +15,8 @@ public class WindCutterSkill extends Skill {
     }
 
     @Override
-    protected void onTick(ServerPlayer player, int age) {
-        SlashSpawner.spawn(player, SlashEffects.GREEN_HORIZONTAL.edit()
+    protected void onTick(LivingEntity entity, int age) {
+        SlashSpawner.spawn(entity, SlashEffects.GREEN_HORIZONTAL.edit()
                 .thickness(0.4)
                 .lifetime(10)
                 .animation(0.3f, 0.8f)

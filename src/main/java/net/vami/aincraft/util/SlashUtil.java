@@ -1,5 +1,6 @@
 package net.vami.aincraft.util;
 
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
@@ -12,11 +13,11 @@ public class SlashUtil {
         return true;
     }
 
-    public static SlashEffect getWeaponSlash(Player player) {
-        AttributeInstance attackSpeed = player.getAttribute(Attributes.ATTACK_SPEED);
+    public static SlashEffect getWeaponSlash(LivingEntity entity) {
+        AttributeInstance attackSpeed = entity.getAttribute(Attributes.ATTACK_SPEED);
         if (attackSpeed == null) return SlashEffects.GREEN_HORIZONTAL;
 
-        AttributeInstance attackReach = player.getAttribute(Attributes.ENTITY_INTERACTION_RANGE);
+        AttributeInstance attackReach = entity.getAttribute(Attributes.ENTITY_INTERACTION_RANGE);
         if (attackReach == null) return SlashEffects.GREEN_HORIZONTAL;
 
         double speed = attackSpeed.getValue();
@@ -37,8 +38,8 @@ public class SlashUtil {
                 .build();
     }
 
-    public static double getStartDist(Player player) {
-        AttributeInstance attackReach = player.getAttribute(Attributes.ENTITY_INTERACTION_RANGE);
+    public static double getStartDist(LivingEntity entity) {
+        AttributeInstance attackReach = entity.getAttribute(Attributes.ENTITY_INTERACTION_RANGE);
         if (attackReach == null) return 0;
 
         return 1 - (attackReach.getValue() / 4);

@@ -5,7 +5,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.vami.aincraft.render.SlashEffect;
@@ -19,18 +18,18 @@ public final class SlashSweep {
 
     public record Segment(Vec3 from, Vec3 to, double radius) {}
 
-    private final Player player;
+    private final LivingEntity entity;
     private final SlashEffect effect;
     private final Vec3 origin;
     private final Vec3 forward;
     private final Vec3 vAxis;
 
-    public SlashSweep(Player player, SlashEffect effect) {
-        this.player = player;
+    public SlashSweep(LivingEntity entity, SlashEffect effect) {
+        this.entity = entity;
         this.effect = effect;
 
-        float yaw = player.getYRot() * Mth.DEG_TO_RAD;
-        float pitch = player.getXRot() * Mth.DEG_TO_RAD;
+        float yaw = entity.getYRot() * Mth.DEG_TO_RAD;
+        float pitch = entity.getXRot() * Mth.DEG_TO_RAD;
 
         forward = new Vec3(
                 -Mth.sin(yaw) * Mth.cos(pitch),
@@ -54,7 +53,7 @@ public final class SlashSweep {
                 .normalize()
                 : swingAxis;
 
-        origin = player.getEyePosition()
+        origin = entity.getEyePosition()
                 .add(right.scale(effect.sway()))
                 .add(up.scale(effect.lift()))
                 .add(effect.xOffset(), effect.yOffset(), effect.zOffset());
@@ -127,12 +126,12 @@ public final class SlashSweep {
 
         Vec3 previousHeadPoint = getArcPoint(
                 Math.toRadians(Mth.lerp(prevHead, effect.startAngle(), effect.endAngle())),
-                effect.radius(),
+                effect.getRadius(prevProgress),
                 prevProgress);
 
         Vec3 currentHeadPoint = getArcPoint(
                 Math.toRadians(Mth.lerp(currentHead, effect.startAngle(), effect.endAngle())),
-                effect.radius(),
+                effect.getRadius(currentProgress),
                 currentProgress);
 
         double maxTravel = Math.max(
@@ -154,13 +153,13 @@ public final class SlashSweep {
     private void calcArc(List<Segment> segments, float headProgress, float moveProgress, double radius) {
         double startAngle = Math.toRadians(effect.startAngle());
         double headAngle = Math.toRadians(Mth.lerp(headProgress, effect.startAngle(), effect.endAngle()));
-        int samples = Math.max(1, (int) Math.ceil(Math.abs(headAngle - startAngle) * effect.radius() / radius));
+        int samples = Math.max(1, (int) Math.ceil(Math.abs(headAngle - startAngle) * effect.getRadius(moveProgress) / radius));
 
         Vec3 previous = null;
 
         for (int i = 0; i <= samples; i++) {
             double angle = Mth.lerp(i / (double) samples, startAngle, headAngle);
-            Vec3 point = getArcPoint(angle, effect.radius(), moveProgress);
+            Vec3 point = getArcPoint(angle, effect.getRadius(moveProgress), moveProgress);
 
             segments.add(previous == null ? new Segment(point, point, radius)
                     : new Segment(previous, point, radius));
@@ -174,15 +173,16 @@ public final class SlashSweep {
         double endAngle = Math.toRadians(effect.endAngle());
         double hitRadius = Math.max(effect.thickness(), 0.25);
 
-        int samples = Math.max(1,
-                (int) Math.ceil(Math.abs(endAngle - startAngle) * effect.radius() / hitRadius));
+        double radius = Math.max(effect.getRadius(prevProgress), effect.getRadius(currentProgress));
+
+        int samples = Math.max(1, (int) Math.ceil(Math.abs(endAngle - startAngle) * radius / hitRadius));
 
         for (int i = 0; i <= samples; i++) {
             double angle = Mth.lerp(i / (double) samples, startAngle, endAngle);
 
             segments.add(new Segment(
-                    getArcPoint(angle, effect.radius(), prevProgress),
-                    getArcPoint(angle, effect.radius(), currentProgress),
+                    getArcPoint(angle, effect.getRadius(prevProgress), prevProgress),
+                    getArcPoint(angle, effect.getRadius(currentProgress), currentProgress),
                     hitRadius));
         }
     }
@@ -216,7 +216,10 @@ public final class SlashSweep {
 
     private void collectMovingLine(List<Segment> segments, float prevProgress, float currentProgress) {
         double hitRadius = Math.max(effect.thickness(), 0.25);
-        int samples = Math.max(1, (int) Math.ceil(Math.abs(effect.length()) / hitRadius));
+
+        double length = Math.max(effect.getLength(prevProgress), effect.getLength(currentProgress));
+
+        int samples = Math.max(1, (int) Math.ceil(Math.abs(length) / hitRadius));
 
         for (int i = 0; i <= samples; i++) {
             float lineProgress = i / (float) samples;
@@ -237,8 +240,8 @@ public final class SlashSweep {
     private Vec3 getLinePoint(float lineProgress, float moveProgress) {
         return center(moveProgress).add(vAxis.scale(Mth.lerp(
                 lineProgress,
-                -effect.length() / 2,
-                effect.length() / 2)));
+                -effect.getLength(moveProgress) / 2,
+                effect.getLength(moveProgress) / 2)));
     }
 
     private float getProgress(float progress) {
@@ -258,10 +261,10 @@ public final class SlashSweep {
         List<Entity> hits = new ArrayList<>();
 
         outer:
-        for (Entity entity : player.level().getEntitiesOfClass(
+        for (Entity entity : entity.level().getEntitiesOfClass(
                 Entity.class,
                 getBounds(segments),
-                entity -> entity != player
+                entity -> entity != this.entity
                         && !(entity instanceof ItemEntity)
                         && entity.isAlive()
                         && !excluded.contains(entity.getId()))) {
@@ -277,7 +280,7 @@ public final class SlashSweep {
         return hits;
     }
 
-    public static boolean wouldHit(Player player, SlashEffect effect) {
+    public static boolean wouldHit(LivingEntity player, SlashEffect effect) {
         List<Segment> segments = new SlashSweep(player, effect).getFullSweep();
         if (segments.isEmpty()) return false;
 
