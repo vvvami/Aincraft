@@ -2,6 +2,7 @@ package net.vami.aincraft.skill;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.vami.aincraft.init.Skills;
 
 public class SkillKeyManager {
 

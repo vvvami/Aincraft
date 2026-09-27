@@ -6,7 +6,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import net.vami.aincraft.Aincraft;
 import net.vami.aincraft.skill.Skill;
-import net.vami.aincraft.skill.Skills;
+import net.vami.aincraft.init.Skills;
 
 @EventBusSubscriber(modid = Aincraft.MOD_ID)
 public class ModCombatEvents {

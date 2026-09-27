@@ -1,5 +1,6 @@
-package net.vami.aincraft.skill;
+package net.vami.aincraft.init;
 
+import net.vami.aincraft.skill.Skill;
 import net.vami.aincraft.skill.custom.*;
 
 public class Skills {
